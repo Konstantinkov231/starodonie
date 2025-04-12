@@ -146,6 +146,15 @@ def get_all_test_results_with_username():
     ''')
     return cur.fetchall()
 
+def clear_test_results():
+    """
+    Удаляет все записи из таблицы тестовых результатов
+    и возвращает количество удалённых строк.
+    """
+    cur.execute("DELETE FROM test_results")
+    base.commit()
+    return cur.rowcount  # Вернёт число удалённых строк
+
 # =============== Пример хендлера для /get_users (отладочный) ===============
 
 @SQL.message(Command('get_users'))
