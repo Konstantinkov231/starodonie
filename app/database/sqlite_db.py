@@ -136,6 +136,16 @@ def get_all_test_results():
     cur.execute("SELECT * FROM test_results")
     return cur.fetchall()
 
+def get_all_test_results_with_username():
+    # Объединяем таблицы test_results и users_start по tg_id
+    cur.execute('''
+        SELECT tr.id, tr.tg_id, us.username, tr.score, tr.total, tr.timestamp
+        FROM test_results AS tr
+        LEFT JOIN users_start AS us ON tr.tg_id = us.tg_id
+        ORDER BY tr.timestamp DESC
+    ''')
+    return cur.fetchall()
+
 # =============== Пример хендлера для /get_users (отладочный) ===============
 
 @SQL.message(Command('get_users'))
