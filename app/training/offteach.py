@@ -2,10 +2,10 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import CallbackQuery, FSInputFile
-from aiogram.utils.keyboard import InlineKeyboardButton, InlineKeyboardMarkup
 
 import app.keyboards as kb  # здесь могут находиться общие клавиатуры и, например, словарь video_note_messages
 from app.database import sqlite_db
+from app.keyboards import *
 
 waiter = Router()
 
@@ -159,6 +159,17 @@ class TestStates(StatesGroup):
     q7 = State()
     q8 = State()
     q9 = State()
+    q10 = State()
+    q11 = State()
+    q12 = State()
+    q13 = State()
+    q14 = State()
+    q15 = State()
+    q16 = State()
+    q17 = State()
+    q18 = State()
+
+
 # ============================================================================
 # Сохранённые ранее обработчики (если нужны для альтернативной логики)
 # ============================================================================
@@ -237,215 +248,271 @@ async def lesson5_next(callback_query: CallbackQuery, state: FSMContext):
 @waiter.callback_query(F.data == "start_test")
 async def start_new_test(callback_query: CallbackQuery, state: FSMContext):
     await callback_query.message.delete()
+    # Инициализируем счет теста
+    await state.update_data(score=0)
     question1 = "<b>Вопрос 1:</b> Какие украшения допускаются для официанта-девушки?"
-    await callback_query.message.answer(question1, parse_mode="HTML", reply_markup=new_test_q1_kb)
+    await callback_query.message.answer(question1, parse_mode="HTML", reply_markup=kb.new_test_q1_kb)
     await state.set_state(TestStates.q1)
 
 @waiter.callback_query(F.data.in_(["new_q1_right", "new_q1_wrong"]))
 async def answer_new_q1(callback_query: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    score = data.get("score", 0)
     if callback_query.data == "new_q1_right":
         feedback = "Правильно! Допускаются серьги-гвоздики или кольца диаметром до 3 см."
+        score += 1
     else:
         feedback = "Неверно. Правильный ответ: серьги-гвоздики или кольца диаметром до 3 см."
-    await callback_query.message.answer(feedback)
+    await state.update_data(score=score)
     question2 = "<b>Вопрос 2:</b> Какой должна быть обувь официанта?"
-    await callback_query.message.answer(question2, parse_mode="HTML", reply_markup=new_test_q2_kb)
+    await callback_query.message.answer(question2, parse_mode="HTML", reply_markup=kb.new_test_q2_kb)
     await state.set_state(TestStates.q2)
 
 @waiter.callback_query(F.data.in_(["new_q2_right", "new_q2_wrong"]))
 async def answer_new_q2(callback_query: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    score = data.get("score", 0)
     if callback_query.data == "new_q2_right":
         feedback = "Верно! Официант должен носить удобную обувь с закрытым носом, неброских цветов."
+        score += 1
     else:
         feedback = "Неверно. Правильный ответ: удобная, с закрытым носом, неброских цветов."
-    await callback_query.message.answer(feedback)
+    await state.update_data(score=score)
     question3 = "<b>Вопрос 3:</b> Как должны быть уложены волосы у официанта-мужчины, если они длинные?"
-    await callback_query.message.answer(question3, parse_mode="HTML", reply_markup=new_test_q3_kb)
+    await callback_query.message.answer(question3, parse_mode="HTML", reply_markup=kb.new_test_q3_kb)
     await state.set_state(TestStates.q3)
 
 @waiter.callback_query(F.data.in_(["new_q3_right", "new_q3_wrong"]))
 async def answer_new_q3(callback_query: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    score = data.get("score", 0)
     if callback_query.data == "new_q3_right":
         feedback = "Правильно! Волосы должны быть собраны."
+        score += 1
     else:
         feedback = "Неверно. Правильный ответ: волосы должны быть собраны."
-    await callback_query.message.answer(feedback)
+    await state.update_data(score=score)
     question4 = "<b>Вопрос 4:</b> Что категорически запрещено официантам делать в зале?"
-    await callback_query.message.answer(question4, parse_mode="HTML", reply_markup=new_test_q4_kb)
+    await callback_query.message.answer(question4, parse_mode="HTML", reply_markup=kb.new_test_q4_kb)
     await state.set_state(TestStates.q4)
 
 @waiter.callback_query(F.data.in_(["new_q4_right", "new_q4_wrong"]))
 async def answer_new_q4(callback_query: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    score = data.get("score", 0)
     if callback_query.data == "new_q4_right":
         feedback = "Верно! Официантам запрещено пользоваться мобильными телефонами."
+        score += 1
     else:
         feedback = "Неверно. Правильный ответ: пользоваться мобильными телефонами."
-    await callback_query.message.answer(feedback)
+    await state.update_data(score=score)
     question5 = "<b>Вопрос 5:</b> Как нужно носить поднос с напитками и блюдами?"
-    await callback_query.message.answer(question5, parse_mode="HTML", reply_markup=new_test_q5_kb)
+    await callback_query.message.answer(question5, parse_mode="HTML", reply_markup=kb.new_test_q5_kb)
     await state.set_state(TestStates.q5)
 
 @waiter.callback_query(F.data.in_(["new_q5_right", "new_q5_wrong"]))
 async def answer_new_q5(callback_query: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    score = data.get("score", 0)
     if callback_query.data == "new_q5_right":
         feedback = "Верно! Поднос носят только на одной руке, легкий на пальцах, тяжелый на ладони."
+        score += 1
     else:
         feedback = "Неверно. Правильный ответ: только на одной руке, легкий на пальцах, тяжелый на ладони."
-    await callback_query.message.answer(feedback)
+    await state.update_data(score=score)
     question6 = "<b>Вопрос 6:</b> В течение какого времени официант должен подойти к гостю после посадки?"
-    await callback_query.message.answer(question6, parse_mode="HTML", reply_markup=new_test_q6_kb)
+    await callback_query.message.answer(question6, parse_mode="HTML", reply_markup=kb.new_test_q6_kb)
     await state.set_state(TestStates.q6)
 
 @waiter.callback_query(F.data.in_(["new_q6_right", "new_q6_wrong"]))
 async def answer_new_q6(callback_query: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    score = data.get("score", 0)
     if callback_query.data == "new_q6_right":
         feedback = "Верно! Официант должен подойти к гостю в течение 3 минут."
+        score += 1
     else:
         feedback = "Неверно. Правильный ответ: в течение 3 минут."
-    await callback_query.message.answer(feedback)
+    await state.update_data(score=score)
     question7 = "<b>Вопрос 7:</b> Когда необходимо предложить гостям десерты и горячие напитки?"
-    await callback_query.message.answer(question7, parse_mode="HTML", reply_markup=new_test_q7_kb)
+    await callback_query.message.answer(question7, parse_mode="HTML", reply_markup=kb.new_test_q7_kb)
     await state.set_state(TestStates.q7)
 
 @waiter.callback_query(F.data.in_(["new_q7_right", "new_q7_wrong"]))
 async def answer_new_q7(callback_query: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    score = data.get("score", 0)
     if callback_query.data == "new_q7_right":
         feedback = "Верно! Предложение должно происходить после того, как убрана грязная посуда со стола."
+        score += 1
     else:
         feedback = "Неверно. Правильный ответ: после того, как убрана грязная посуда со стола."
-    await callback_query.message.answer(feedback)
+    await state.update_data(score=score)
     question8 = "<b>Вопрос 8:</b> Какой первый шаг в работе с возражениями гостей?"
-    await callback_query.message.answer(question8, parse_mode="HTML", reply_markup=new_test_q8_kb)
+    await callback_query.message.answer(question8, parse_mode="HTML", reply_markup=kb.new_test_q8_kb)
     await state.set_state(TestStates.q8)
 
 @waiter.callback_query(F.data.in_(["new_q8_right", "new_q8_wrong"]))
 async def answer_new_q8(callback_query: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    score = data.get("score", 0)
     if callback_query.data == "new_q8_right":
         feedback = "Верно! Первым шагом является выслушать гостя до конца."
+        score += 1
     else:
         feedback = "Неверно. Правильный ответ: выслушать гостя до конца."
-    await callback_query.message.answer(feedback)
+    await state.update_data(score=score)
     question9 = "<b>Вопрос 9:</b> Какая из перечисленных ценностей НЕ относится к ресторану Стародонье?"
-    await callback_query.message.answer(question9, parse_mode="HTML", reply_markup=new_test_q9_kb)
+    await callback_query.message.answer(question9, parse_mode="HTML", reply_markup=kb.new_test_q9_kb)
     await state.set_state(TestStates.q9)
 
 @waiter.callback_query(F.data.in_(["new_q9_right", "new_q9_wrong"]))
 async def answer_new_q9(callback_query: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    score = data.get("score", 0)
     if callback_query.data == "new_q9_right":
         feedback = "Отлично! Конкуренция – это ценность, которая не соответствует ценностям ресторана Стародонье."
+        score += 1
     else:
         feedback = "Неверно. Правильный ответ: конкуренция."
-    await callback_query.message.answer(feedback)
-    # Переходим к следующему блоку вопросов (10-18)
+    await state.update_data(score=score)
     question10 = "<b>Вопрос 10:</b> Какие головные уборы допускаются для официанта?"
-    await callback_query.message.answer(question10, parse_mode="HTML", reply_markup=new_test_q10_kb)
+    await callback_query.message.answer(question10, parse_mode="HTML", reply_markup=kb.new_test_q10_kb)
     await state.set_state(TestStates.q10)
-
-# Обработчики для вопросов 10–18 нового блока
 
 @waiter.callback_query(F.data.in_(["new_q10_right", "new_q10_wrong"]))
 async def answer_new_q10(callback_query: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    score = data.get("score", 0)
     if callback_query.data == "new_q10_right":
         feedback = "Верно! Фирменный головной убор допускается."
+        score += 1
     else:
         feedback = "Неверно. Правильный ответ: фирменный головной убор."
-    await callback_query.message.answer(feedback)
+    await state.update_data(score=score)
     question11 = "<b>Вопрос 11:</b> Какой должен быть стиль макияжа официантки?"
-    await callback_query.message.answer(question11, parse_mode="HTML", reply_markup=new_test_q11_kb)
+    await callback_query.message.answer(question11, parse_mode="HTML", reply_markup=kb.new_test_q11_kb)
     await state.set_state(TestStates.q11)
 
 @waiter.callback_query(F.data.in_(["new_q11_right", "new_q11_wrong"]))
 async def answer_new_q11(callback_query: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    score = data.get("score", 0)
     if callback_query.data == "new_q11_right":
         feedback = "Верно! Нейтральный и естественный макияж предпочтителен."
+        score += 1
     else:
         feedback = "Неверно. Правильный ответ: нейтральный и естественный макияж."
-    await callback_query.message.answer(feedback)
+    await state.update_data(score=score)
     question12 = "<b>Вопрос 12:</b> Как правильно ухаживать за униформой официанта?"
-    await callback_query.message.answer(question12, parse_mode="HTML", reply_markup=new_test_q12_kb)
+    await callback_query.message.answer(question12, parse_mode="HTML", reply_markup=kb.new_test_q12_kb)
     await state.set_state(TestStates.q12)
 
 @waiter.callback_query(F.data.in_(["new_q12_right", "new_q12_wrong"]))
 async def answer_new_q12(callback_query: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    score = data.get("score", 0)
     if callback_query.data == "new_q12_right":
         feedback = "Верно! Униформа должна быть всегда чистой и выглаженной."
+        score += 1
     else:
         feedback = "Неверно. Правильный ответ: всегда чистая и выглаженная униформа."
-    await callback_query.message.answer(feedback)
+    await state.update_data(score=score)
     question13 = "<b>Вопрос 13:</b> Что является проявлением профессионализма на рабочем месте?"
-    await callback_query.message.answer(question13, parse_mode="HTML", reply_markup=new_test_q13_kb)
+    await callback_query.message.answer(question13, parse_mode="HTML", reply_markup=kb.new_test_q13_kb)
     await state.set_state(TestStates.q13)
 
 @waiter.callback_query(F.data.in_(["new_q13_right", "new_q13_wrong"]))
 async def answer_new_q13(callback_query: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    score = data.get("score", 0)
     if callback_query.data == "new_q13_right":
         feedback = "Верно! Своевременное выполнение обязанностей и аккуратный внешний вид – проявление профессионализма."
+        score += 1
     else:
         feedback = "Неверно. Правильный ответ: своевременное выполнение обязанностей и аккуратный внешний вид."
-    await callback_query.message.answer(feedback)
+    await state.update_data(score=score)
     question14 = "<b>Вопрос 14:</b> Какие действия способствуют улучшению клиентского опыта?"
-    await callback_query.message.answer(question14, parse_mode="HTML", reply_markup=new_test_q14_kb)
+    await callback_query.message.answer(question14, parse_mode="HTML", reply_markup=kb.new_test_q14_kb)
     await state.set_state(TestStates.q14)
 
 @waiter.callback_query(F.data.in_(["new_q14_right", "new_q14_wrong"]))
 async def answer_new_q14(callback_query: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    score = data.get("score", 0)
     if callback_query.data == "new_q14_right":
         feedback = "Верно! Внимательное отношение и готовность помочь значительно улучшают клиентский опыт."
+        score += 1
     else:
         feedback = "Неверно. Правильный ответ: внимательное отношение и готовность помочь."
-    await callback_query.message.answer(feedback)
+    await state.update_data(score=score)
     question15 = "<b>Вопрос 15:</b> Как правильно обслуживать стол без нарушения этикета?"
-    await callback_query.message.answer(question15, parse_mode="HTML", reply_markup=new_test_q15_kb)
+    await callback_query.message.answer(question15, parse_mode="HTML", reply_markup=kb.new_test_q15_kb)
     await state.set_state(TestStates.q15)
 
 @waiter.callback_query(F.data.in_(["new_q15_right", "new_q15_wrong"]))
 async def answer_new_q15(callback_query: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    score = data.get("score", 0)
     if callback_query.data == "new_q15_right":
         feedback = "Верно! Следование стандартам сервировки – залог правильного обслуживания."
+        score += 1
     else:
         feedback = "Неверно. Правильный ответ: следовать установленным стандартам сервировки."
-    await callback_query.message.answer(feedback)
+    await state.update_data(score=score)
     question16 = "<b>Вопрос 16:</b> Какую роль играет коммуникация с гостями при заказе напитков?"
-    await callback_query.message.answer(question16, parse_mode="HTML", reply_markup=new_test_q16_kb)
+    await callback_query.message.answer(question16, parse_mode="HTML", reply_markup=kb.new_test_q16_kb)
     await state.set_state(TestStates.q16)
 
 @waiter.callback_query(F.data.in_(["new_q16_right", "new_q16_wrong"]))
 async def answer_new_q16(callback_query: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    score = data.get("score", 0)
     if callback_query.data == "new_q16_right":
         feedback = "Верно! Точная коммуникация помогает удовлетворить пожелания гостя."
+        score += 1
     else:
         feedback = "Неверно. Правильный ответ: коммуникация позволяет точно определить пожелания гостя."
-    await callback_query.message.answer(feedback)
+    await state.update_data(score=score)
     question17 = "<b>Вопрос 17:</b> Как официант должен реагировать на жалобы клиента?"
-    await callback_query.message.answer(question17, parse_mode="HTML", reply_markup=new_test_q17_kb)
+    await callback_query.message.answer(question17, parse_mode="HTML", reply_markup=kb.new_test_q17_kb)
     await state.set_state(TestStates.q17)
 
 @waiter.callback_query(F.data.in_(["new_q17_right", "new_q17_wrong"]))
 async def answer_new_q17(callback_query: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    score = data.get("score", 0)
     if callback_query.data == "new_q17_right":
-        feedback = "Верно! Выслушать, извиниться и предложить решение – оптимальная реакция."
+        feedback = "Верно! Выслушать жалобу, извиниться и предложить решение – оптимальная реакция."
+        score += 1
     else:
         feedback = "Неверно. Правильный ответ: выслушать жалобу, извиниться и предложить решение."
-    await callback_query.message.answer(feedback)
+    await state.update_data(score=score)
     question18 = "<b>Вопрос 18:</b> Какие принципы работы в команде наиболее важны для ресторана Стародонье?"
-    await callback_query.message.answer(question18, parse_mode="HTML", reply_markup=new_test_q18_kb)
+    await callback_query.message.answer(question18, parse_mode="HTML", reply_markup=kb.new_test_q18_kb)
     await state.set_state(TestStates.q18)
 
 @waiter.callback_query(F.data.in_(["new_q18_right", "new_q18_wrong"]))
 async def answer_new_q18(callback_query: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    score = data.get("score", 0)
     if callback_query.data == "new_q18_right":
         feedback = "Отлично! Взаимное уважение и поддержка – ключевые принципы."
+        score += 1
     else:
         feedback = "Неверно. Правильный ответ: взаимное уважение и поддержка."
+    await state.update_data(score=score)
+    data = await state.get_data()  # Получаем финальный счет
+    final_score = data.get("score", 0)
     final_text = (
         f"{feedback}\n\n"
         "Поздравляем, вы прошли тест!\n"
         "Спасибо за прохождение теста! Будем рады видеть вас в нашем Telegram‑форуме.\n\n"
-        f"Ваш результат: {score} из 18."
+        f"Ваш результат: {final_score} из 18."
     )
-    # Записываем результат в базу данных
+    # Записываем результат в базу
     tg_id = callback_query.from_user.id
-    sqlite_db.add_test_result(tg_id, score, 18)
+    sqlite_db.add_test_result(tg_id, final_score, 18)
     forum_keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="Перейти в форум", url="https://t.me/your_forum")]
     ])
