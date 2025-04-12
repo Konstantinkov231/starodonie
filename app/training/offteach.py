@@ -491,7 +491,7 @@ async def answer_new_q18(callback_query: CallbackQuery, state: FSMContext):
     tg_id = callback_query.from_user.id
     sqlite_db.add_test_result(tg_id, final_score, 18)
     forum_keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Перейти в форум", url="https://t.me/your_forum")]
+        [InlineKeyboardButton(text="Перейти в форум", url="https://t.me/+d6m5PBG2e6M3ZmFi")]
     ])
     await callback_query.message.answer(final_text, parse_mode="HTML", reply_markup=forum_keyboard)
     await state.clear()
