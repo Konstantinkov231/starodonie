@@ -1,9 +1,9 @@
 import sqlite3
 from datetime import datetime
 
-from aiogram.types import Message
-from aiogram import F, Router
+from aiogram import Router
 from aiogram.filters import Command
+from aiogram.types import Message
 
 SQL = Router()
 
@@ -46,6 +46,17 @@ def sql_start():
                 tg_id INTEGER UNIQUE
             )
         ''')
+
+    # Таблица для результатов теста
+    cur.execute('''
+           CREATE TABLE IF NOT EXISTS test_results (
+               id INTEGER PRIMARY KEY AUTOINCREMENT,
+               tg_id INTEGER,
+               score INTEGER,
+               total INTEGER,
+               timestamp TEXT
+           )
+       ''')
 
     base.commit()
 
@@ -101,6 +112,28 @@ def get_all_guest_cards():
     Получаем все записи из таблицы guest_cards.
     """
     cur.execute("SELECT * FROM guest_cards")
+    return cur.fetchall()
+
+# Функция для таблицы waiters
+def add_waiter(tg_id: int):
+    try:
+        cur.execute("INSERT OR IGNORE INTO waiters (tg_id) VALUES (?)", (tg_id,))
+        base.commit()
+        print(f"Официант с tg_id {tg_id} успешно добавлен.")
+    except Exception as e:
+        print("Ошибка при добавлении официанта:", e)
+
+# Функция для тестовых результатов
+def add_test_result(tg_id: int, score: int, total: int):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cur.execute('''
+        INSERT INTO test_results (tg_id, score, total, timestamp)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (tg_id, score, total, timestamp))
+    base.commit()
+
+def get_all_test_results():
+    cur.execute("SELECT * FROM test_results")
     return cur.fetchall()
 
 # =============== Пример хендлера для /get_users (отладочный) ===============
