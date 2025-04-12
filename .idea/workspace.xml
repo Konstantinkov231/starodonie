@@ -108,7 +108,14 @@
       <option name="project" value="LOCAL" />
       <updated>1744500290039</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="ещё одно блядское обновление">
+      <created>1744501325552</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1744501325553</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -138,7 +145,8 @@
     <MESSAGE value="коммит тест" />
     <MESSAGE value="обновление теста, редакция БД, ЕБУЧАЯ b" />
     <MESSAGE value="обработчики теста + &#10;обновление теста, редакция БД, ЕБУЧАЯ b" />
-    <option name="LAST_COMMIT_MESSAGE" value="обработчики теста + &#10;обновление теста, редакция БД, ЕБУЧАЯ b" />
+    <MESSAGE value="ещё одно блядское обновление" />
+    <option name="LAST_COMMIT_MESSAGE" value="ещё одно блядское обновление" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
 </project>
