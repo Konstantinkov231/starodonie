@@ -50,12 +50,11 @@ def sql_start():
     # Таблица для результатов теста
     cur.execute('''
            CREATE TABLE IF NOT EXISTS test_results (
-               id INTEGER PRIMARY KEY AUTOINCREMENT,
-               tg_id INTEGER,
-               score INTEGER,
-               total INTEGER,
-               timestamp TEXT
-           )
+                tg_id INTEGER PRIMARY KEY,
+                score INTEGER,
+                total INTEGER,
+                timestamp TEXT
+            )   
        ''')
 
     base.commit()
@@ -127,7 +126,7 @@ def add_waiter(tg_id: int):
 def add_test_result(tg_id: int, score: int, total: int):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     cur.execute('''
-        INSERT INTO test_results (tg_id, score, total, timestamp)
+        INSERT OR REPLACE INTO test_results (tg_id, score, total, timestamp)
         VALUES (?, ?, ?, ?)
     ''', (tg_id, score, total, timestamp))
     base.commit()
