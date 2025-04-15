@@ -53,17 +53,17 @@
     document.addEventListener('DOMContentLoaded', function() {
       var calendarEl = document.getElementById('calendar');
       var calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'timeGridWeek', // отобразить календарь с разбивкой по часам в недельном виде
+        initialView: 'timeGridWeek',
         headerToolbar: {
           left: 'prev,next today',
           center: 'title',
           right: 'timeGridWeek,timeGridDay'
         },
-        events: '/api/schedule', // данные о сменах официантов
+        events: '/api/schedule',  // данные о сменах официантов
         nowIndicator: true,
         slotDuration: '00:30:00',      // интервал в 30 минут
         slotLabelInterval: '01:00',    // подписи с шагом в 1 час
-        allDaySlot: false,             // не показывать отдельный слот "Весь день"
+        allDaySlot: false
       });
       calendar.render();
     });

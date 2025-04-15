@@ -37,7 +37,7 @@ db.serialize(() => {
 
 // Middleware для парсинга JSON
 app.use(express.json());
-// Раздача статических файлов из текущей директории (включая index.html и admin.html)
+// Раздача статических файлов из текущей директории (index.html, admin.html и т.д.)
 app.use(express.static(path.join(__dirname)));
 
 // ===== API для управления сменами (shifts) =====
