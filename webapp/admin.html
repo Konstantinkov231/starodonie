@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Панель администратора</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h2 { color: #4CAF50; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    .form-container { margin-bottom: 20px; }
+    label { display: block; margin-top: 10px; }
+    input[type="text"], input[type="number"], input[type="datetime-local"] {
+      width: 100%; padding: 8px; box-sizing: border-box;
+    }
+    button { margin-top: 10px; }
+    .tab {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #ccc;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    .active-tab { background-color: #4CAF50; color: white; }
+    .section { display: none; }
+    .visible { display: block; }
+  </style>
+</head>
+<body>
+  <h1>Панель администратора</h1>
+
+  <div>
+    <span class="tab active-tab" data-tab="staff-section">Сотрудники</span>
+    <span class="tab" data-tab="shifts-section">Смены</span>
+  </div>
+
+  <!-- Раздел для управления сотрудниками -->
+  <div id="staff-section" class="section visible">
+    <h2>Сотрудники</h2>
+    <div class="form-container">
+      <h3>Добавить сотрудника</h3>
+      <label for="staff-name">Имя:</label>
+      <input type="text" id="staff-name">
+      <label for="staff-role">Роль:</label>
+      <input type="text" id="staff-role">
+      <label for="staff-rate">Ставка (руб/час):</label>
+      <input type="number" id="staff-rate" step="0.01">
+      <button onclick="addStaff()">Добавить</button>
+    </div>
+    <h3>Список сотрудников</h3>
+    <table id="staff-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Имя</th>
+          <th>Роль</th>
+          <th>Ставка (руб/час)</th>
+          <th>Действия</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <!-- Раздел для управления сменами -->
+  <div id="shifts-section" class="section">
+    <h2>Смены</h2>
+    <div class="form-container">
+      <h3>Добавить смену</h3>
+      <label for="shift-staff-id">ID сотрудника:</label>
+      <input type="number" id="shift-staff-id">
+      <label for="shift-title">Заголовок:</label>
+      <input type="text" id="shift-title">
+      <label for="shift-start">Начало (дата и время):</label>
+      <input type="datetime-local" id="shift-start">
+      <label for="shift-end">Конец (дата и время):</label>
+      <input type="datetime-local" id="shift-end">
+      <button onclick="addShift()">Добавить</button>
+    </div>
+    <h3>Список смен</h3>
+    <table id="shifts-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>ID сотрудника</th>
+          <th>Заголовок</th>
+          <th>Начало</th>
+          <th>Конец</th>
+          <th>Действия</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <h2>Экспорт данных</h2>
+  <button onclick="exportData()">Экспорт в Excel</button>
+
+  <script>
+    // Переключение между разделами по вкладкам
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active-tab'));
+        tab.classList.add('active-tab');
+        document.querySelectorAll('.section').forEach(sec => sec.classList.remove('visible'));
+        document.getElementById(tab.dataset.tab).classList.add('visible');
+      });
+    });
+
+    // Функция для получения списка сотрудников
+    async function fetchStaff() {
+      const res = await fetch('/api/staff');
+      const data = await res.json();
+      const tbody = document.querySelector('#staff-table tbody');
+      tbody.innerHTML = '';
+      data.forEach(staff => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${staff.id}</td>
+          <td><input type="text" value="${staff.name}" onchange="updateStaff(${staff.id}, 'name', this.value)"></td>
+          <td><input type="text" value="${staff.role}" onchange="updateStaff(${staff.id}, 'role', this.value)"></td>
+          <td><input type="number" step="0.01" value="${staff.rate}" onchange="updateStaff(${staff.id}, 'rate', this.value)"></td>
+          <td><button onclick="deleteStaff(${staff.id})">Удалить</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Добавление сотрудника
+    async function addStaff() {
+      const name = document.getElementById('staff-name').value;
+      const role = document.getElementById('staff-role').value;
+      const rate = parseFloat(document.getElementById('staff-rate').value);
+      const res = await fetch('/api/staff', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, role, rate })
+      });
+      if (res.ok) {
+        fetchStaff();
+      } else {
+        alert('Ошибка добавления сотрудника');
+      }
+    }
+
+    // Обновление данных сотрудника
+    async function updateStaff(id, field, value) {
+      const res = await fetch('/api/staff');
+      const staffList = await res.json();
+      const staff = staffList.find(s => s.id === id);
+      if (!staff) return;
+      staff[field] = field === 'rate' ? parseFloat(value) : value;
+      await fetch(`/api/staff/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(staff)
+      });
+      fetchStaff();
+    }
+
+    // Удаление сотрудника
+    async function deleteStaff(id) {
+      if (confirm('Удалить сотрудника?')) {
+        await fetch(`/api/staff/${id}`, { method: 'DELETE' });
+        fetchStaff();
+      }
+    }
+
+    // Функции для управления сменами
+    async function fetchShifts() {
+      const res = await fetch('/api/schedule');
+      const data = await res.json();
+      const tbody = document.querySelector('#shifts-table tbody');
+      tbody.innerHTML = '';
+      data.forEach(shift => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${shift.id}</td>
+          <td>${shift.staff_id || ''}</td>
+          <td><input type="text" value="${shift.title}" onchange="updateShift(${shift.id}, 'title', this.value)"></td>
+          <td><input type="datetime-local" value="${shift.start}" onchange="updateShift(${shift.id}, 'start', this.value)"></td>
+          <td><input type="datetime-local" value="${shift.end}" onchange="updateShift(${shift.id}, 'end', this.value)"></td>
+          <td><button onclick="deleteShift(${shift.id})">Удалить</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function addShift() {
+      const staff_id = parseInt(document.getElementById('shift-staff-id').value);
+      const title = document.getElementById('shift-title').value;
+      const start = document.getElementById('shift-start').value;
+      const end = document.getElementById('shift-end').value;
+      const res = await fetch('/api/schedule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ staff_id, title, start, end })
+      });
+      if (res.ok) {
+        fetchShifts();
+      } else {
+        alert('Ошибка добавления смены');
+      }
+    }
+
+    async function updateShift(id, field, value) {
+      const res = await fetch('/api/schedule');
+      const shifts = await res.json();
+      const shift = shifts.find(s => s.id === id);
+      if (!shift) return;
+      shift[field] = value;
+      await fetch(`/api/schedule/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(shift)
+      });
+      fetchShifts();
+    }
+
+    async function deleteShift(id) {
+      if (confirm('Удалить смену?')) {
+        await fetch(`/api/schedule/${id}`, { method: 'DELETE' });
+        fetchShifts();
+      }
+    }
+
+    // Функция экспорта данных в Excel
+    function exportData() {
+      window.location.href = '/api/export';
+    }
+
+    // Инициализация данных при загрузке страницы
+    fetchStaff();
+    fetchShifts();
+  </script>
+</body>
+</html>

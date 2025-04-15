@@ -57,6 +57,28 @@ def sql_start():
             )   
        ''')
 
+# # staff: сотрудники(официанты, админы и т.д.)
+#     cur.execute('''
+#             CREATE TABLE IF NOT EXISTS staff (
+#                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+#                 name TEXT NOT NULL,
+#                 role TEXT NOT NULL,
+#                 rate REAL DEFAULT 0
+#             )
+#         ''')
+#
+# #shifts: смены
+#     cur.execute('''
+#             CREATE TABLE IF NOT EXISTS shifts (
+#                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+#                 staff_id INTEGER,
+#                 title TEXT,
+#                 start TEXT,
+#                 end TEXT,
+#                 FOREIGN KEY (staff_id) REFERENCES staff(id)
+#         )
+#     ''')
+
     base.commit()
 
 def tG_id(user_id: int):
@@ -226,3 +248,4 @@ def add_waiter(tg_id: int):
         print(f"Официант с tg_id {tg_id} успешно добавлен.")
     except Exception as e:
         print("Ошибка при добавлении официанта:", e)
+
