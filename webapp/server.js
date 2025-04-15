@@ -1,16 +1,29 @@
+// Загружаем переменные окружения из файла .env
+require('dotenv').config();
+
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const ExcelJS = require('exceljs');
+const axios = require('axios');
 const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Конфигурация для отправки сообщения в Telegram
+// В файле .env переменные:
+//   TOKEN – токен вашего бота
+//   CHAT_ID – ваш chat_id (куда отправлять сообщение)
+//   APP_URL – публичный URL вашего приложения
+const TELEGRAM_BOT_TOKEN = process.env.TOKEN || 'YOUR_TELEGRAM_BOT_TOKEN';
+const TELEGRAM_CHAT_ID = process.env.CHAT_ID || 'YOUR_TELEGRAM_CHAT_ID';
+const APP_URL = process.env.APP_URL || 'https://your-domain.com';
+
 // Для парсинга JSON и urlencoded данных
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Подключаем статические файлы (если понадобятся, например, для css или js)
+// Подключаем статические файлы (например, для css или js)
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Инициализация базы данных SQLite
@@ -39,7 +52,7 @@ db.serialize(() => {
     FOREIGN KEY(user_id) REFERENCES users(id)
   )`);
 
-  // Таблица с данными, заполняемыми администраторами – рабочие часы, ставка и премия
+  // Таблица с данными (часы, ставка, премия) для администраторов
   db.run(`CREATE TABLE IF NOT EXISTS work_details (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     schedule_id INTEGER,
@@ -91,7 +104,7 @@ app.get('/waiter', (req, res) => {
 
       // Инициализируем Flatpickr для выбора даты
       flatpickr("#date", { dateFormat: "Y-m-d" });
-
+      
       document.getElementById('scheduleForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         const date = document.getElementById('date').value;
@@ -163,11 +176,9 @@ app.get('/admin', (req, res) => {
     <br>
     <button onclick="window.location.href='/admin/export'">Экспортировать в Excel</button>
     <script>
-      // Инициализируем Telegram WebApp (если запускается из Telegram)
       const tg = window.Telegram.WebApp;
       tg.expand();
 
-      // Получение списка графиков, ожидающих утверждения
       async function fetchSchedules() {
         try {
           const response = await axios.get('/admin/schedules');
@@ -190,7 +201,7 @@ app.get('/admin', (req, res) => {
           alert("Ошибка загрузки графиков");
         }
       }
-
+      
       async function approveSchedule(id) {
         try {
           await axios.post('/admin/schedule/approve', { scheduleId: id });
@@ -200,7 +211,7 @@ app.get('/admin', (req, res) => {
           alert("Ошибка утверждения графика");
         }
       }
-
+      
       async function updateDetails(id) {
         const hours = document.getElementById('hours_' + id).value;
         const rate = document.getElementById('rate_' + id).value;
@@ -250,7 +261,6 @@ app.post('/admin/schedule/approve', (req, res) => {
 // API для сохранения рабочих данных (часы, ставка, премия)
 app.post('/admin/schedule/update', (req, res) => {
   const { scheduleId, hours, rate, bonus } = req.body;
-  // Проверяем, существует ли уже запись в work_details для данного графика
   const querySelect = "SELECT * FROM work_details WHERE schedule_id = ?";
   db.get(querySelect, [scheduleId], (err, row) => {
     if (err) {
@@ -258,7 +268,6 @@ app.post('/admin/schedule/update', (req, res) => {
       return res.status(500).json({ message: "Ошибка при обновлении данных" });
     }
     if (row) {
-      // Обновляем данные
       const queryUpdate = "UPDATE work_details SET hours = ?, rate = ?, bonus = ? WHERE schedule_id = ?";
       db.run(queryUpdate, [hours, rate, bonus, scheduleId], function(err) {
         if (err) {
@@ -268,7 +277,6 @@ app.post('/admin/schedule/update', (req, res) => {
         res.json({ message: "Данные обновлены" });
       });
     } else {
-      // Вставляем новую запись
       const queryInsert = "INSERT INTO work_details (schedule_id, hours, rate, bonus) VALUES (?, ?, ?, ?)";
       db.run(queryInsert, [scheduleId, hours, rate, bonus], function(err) {
         if (err) {
@@ -284,9 +292,7 @@ app.post('/admin/schedule/update', (req, res) => {
 // ====================================================================
 // Экспорт данных в Excel для администратора
 // ====================================================================
-
 app.get('/admin/export', (req, res) => {
-  // Получаем данные из объединённых таблиц: график + данные о работе
   const query = `
     SELECT s.date, u.username, s.shift, w.hours, w.rate, w.bonus
     FROM schedules s
@@ -311,7 +317,6 @@ app.get('/admin/export', (req, res) => {
       { header: 'Премия', key: 'bonus', width: 10 }
     ];
 
-    // Заполняем данные
     rows.forEach(row => {
       worksheet.addRow(row);
     });
@@ -328,8 +333,23 @@ app.get('/admin/export', (req, res) => {
 });
 
 // ====================================================================
-// Запуск сервера
+// Запуск сервера и отправка сообщения в Telegram
 // ====================================================================
 app.listen(PORT, () => {
   console.log(`Сервер запущен на порту ${PORT}`);
+
+  // Формируем текст сообщения с ссылкой на приложение
+  const messageText = `Ваше приложение запущено и доступно по адресу: ${APP_URL}`;
+
+  // Отправляем сообщение через Telegram Bot API
+  axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      chat_id: TELEGRAM_CHAT_ID,
+      text: messageText
+  })
+  .then(response => {
+      console.log('Сообщение отправлено в Telegram:', response.data);
+  })
+  .catch(error => {
+      console.error('Ошибка при отправке сообщения в Telegram:', error.response ? error.response.data : error.message);
+  });
 });
