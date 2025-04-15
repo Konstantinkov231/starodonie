@@ -4,31 +4,35 @@
   <meta charset="UTF-8">
   <title>Рабочее расписание</title>
   <!-- Подключаем FullCalendar CSS через CDN -->
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/dist/index.global.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.8/dist/index.global.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.8/dist/timegrid.global.min.css" rel="stylesheet">
   <style>
     /* Общие стили с использованием зеленых, светлокоричневых и белых оттенков */
     body {
-      background-color: #ffffff;
+      background-color: #ffffff; /* Белый фон */
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
     }
     header {
-      background-color: #4CAF50;
+      background-color: #4CAF50; /* Зеленый */
       color: #fff;
       padding: 15px;
       text-align: center;
     }
+    /* Стили тулбара календаря */
     .fc-toolbar {
-      background-color: #D2B48C;
+      background-color: #D2B48C; /* Светлокоричневый */
     }
+    /* Стили для событий календаря */
     .fc-event {
-      background-color: #4CAF50;
+      background-color: #4CAF50; /* Зеленый фон для событий */
       border: 1px solid #ffffff;
       color: #fff;
       padding: 2px;
       font-size: 0.85em;
     }
+    /* Контейнер календаря */
     #calendar-container {
       max-width: 900px;
       margin: 40px auto;
@@ -45,22 +49,23 @@
   </div>
 
   <!-- Подключаем FullCalendar JS через CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/dist/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.8/dist/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.8/dist/timegrid.global.min.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       var calendarEl = document.getElementById('calendar');
       var calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'timeGridWeek',
+        initialView: 'timeGridWeek', // отображение с разбивкой по часам в недельном виде
         headerToolbar: {
           left: 'prev,next today',
           center: 'title',
           right: 'timeGridWeek,timeGridDay'
         },
-        events: '/api/schedule',  // API для получения событий
+        events: '/api/schedule',      // данные о сменах получаем через API
         nowIndicator: true,
-        slotDuration: '00:30:00',
-        slotLabelInterval: '01:00',
-        allDaySlot: false
+        slotDuration: '00:30:00',      // интервал в 30 минут
+        slotLabelInterval: '01:00',    // подписи с шагом в 1 час
+        allDaySlot: false              // не показывать отдельный слот "Весь день"
       });
       calendar.render();
     });
