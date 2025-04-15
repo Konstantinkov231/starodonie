@@ -38,5 +38,4 @@ def api_schedule():
     return jsonify(schedule)
 
 if __name__ == '__main__':
-    # Включаем debug-режим для разработки (не используйте в продакшене)
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
