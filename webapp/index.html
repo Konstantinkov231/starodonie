@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Рабочее расписание</title>
-  <!-- Подключаем стили FullCalendar -->
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet" />
+  <!-- Подключаем локальные стили FullCalendar -->
+  <link href="./fullcalendar/main.min.css" rel="stylesheet" />
   <style>
     /* Общие стили с использованием зеленых, светлокоричневых и белых оттенков */
     body {
@@ -47,13 +47,13 @@
     <div id="calendar"></div>
   </div>
 
-  <!-- Подключаем скрипты FullCalendar -->
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js"></script>
+  <!-- Подключаем локальный скрипт FullCalendar -->
+  <script src="./fullcalendar/main.min.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       var calendarEl = document.getElementById('calendar');
       var calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'timeGridWeek',
+        initialView: 'timeGridWeek', // отображение с разбивкой по часам в недельном виде
         headerToolbar: {
           left: 'prev,next today',
           center: 'title',
