@@ -1,4 +1,3 @@
-// server.js
 const express = require('express');
 const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
@@ -7,7 +6,7 @@ const ExcelJS = require('exceljs');
 const app = express();
 const port = 5000;
 
-// Подключение к базе данных SQLite
+// Подключение к базе данных SQLite (используется база schedule.db)
 const db = new sqlite3.Database('schedule.db', (err) => {
   if (err) {
     console.error('Ошибка подключения к SQLite:', err.message);
@@ -41,12 +40,10 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
 // ===== API для управления сменами (shifts) =====
-// Получить список смен
 app.get('/api/schedule', (req, res) => {
   const sql = `SELECT * FROM shifts`;
   db.all(sql, [], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
-    // Преобразуем записи в формат, удобный для FullCalendar
     const events = rows.map((row) => ({
       id: row.id,
       staff_id: row.staff_id,
@@ -58,7 +55,6 @@ app.get('/api/schedule', (req, res) => {
   });
 });
 
-// Добавление новой смены
 app.post('/api/schedule', (req, res) => {
   const { staff_id, title, start, end } = req.body;
   const sql = `INSERT INTO shifts (staff_id, title, start, end) VALUES (?, ?, ?, ?)`;
@@ -68,7 +64,6 @@ app.post('/api/schedule', (req, res) => {
   });
 });
 
-// Обновление смены
 app.put('/api/schedule/:id', (req, res) => {
   const { id } = req.params;
   const { staff_id, title, start, end } = req.body;
@@ -79,7 +74,6 @@ app.put('/api/schedule/:id', (req, res) => {
   });
 });
 
-// Удаление смены
 app.delete('/api/schedule/:id', (req, res) => {
   const { id } = req.params;
   const sql = `DELETE FROM shifts WHERE id = ?`;
@@ -90,7 +84,6 @@ app.delete('/api/schedule/:id', (req, res) => {
 });
 
 // ===== API для управления сотрудниками (staff) =====
-// Получить список сотрудников
 app.get('/api/staff', (req, res) => {
   const sql = `SELECT * FROM staff`;
   db.all(sql, [], (err, rows) => {
@@ -99,7 +92,6 @@ app.get('/api/staff', (req, res) => {
   });
 });
 
-// Добавление нового сотрудника
 app.post('/api/staff', (req, res) => {
   const { name, role, rate } = req.body;
   const sql = `INSERT INTO staff (name, role, rate) VALUES (?, ?, ?)`;
@@ -109,7 +101,6 @@ app.post('/api/staff', (req, res) => {
   });
 });
 
-// Обновление данных сотрудника
 app.put('/api/staff/:id', (req, res) => {
   const { id } = req.params;
   const { name, role, rate } = req.body;
@@ -120,7 +111,6 @@ app.put('/api/staff/:id', (req, res) => {
   });
 });
 
-// Удаление сотрудника
 app.delete('/api/staff/:id', (req, res) => {
   const { id } = req.params;
   const sql = `DELETE FROM staff WHERE id = ?`;
@@ -138,13 +128,10 @@ app.get('/api/export', (req, res) => {
     FROM shifts
     LEFT JOIN staff ON shifts.staff_id = staff.id
   `;
-
   db.all(sql, [], async (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
-
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Отчёт по сменам');
-
     worksheet.columns = [
       { header: 'ID смены', key: 'id', width: 10 },
       { header: 'Сотрудник', key: 'staff_name', width: 20 },
@@ -155,13 +142,11 @@ app.get('/api/export', (req, res) => {
       { header: 'Часы', key: 'hours', width: 10 },
       { header: 'Сумма (руб)', key: 'sum_rub', width: 15 },
     ];
-
     rows.forEach((row) => {
       const start = new Date(row.start);
       const end = new Date(row.end);
       const hoursDiff = (end - start) / (1000 * 60 * 60);
       const pay = row.staff_rate * hoursDiff;
-
       worksheet.addRow({
         id: row.id,
         staff_name: row.staff_name || '',
@@ -173,10 +158,7 @@ app.get('/api/export', (req, res) => {
         sum_rub: pay.toFixed(2),
       });
     });
-
-    res.setHeader('Content-Type',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    );
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', 'attachment; filename=report.xlsx');
     await workbook.xlsx.write(res);
     res.end();

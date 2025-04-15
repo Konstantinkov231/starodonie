@@ -98,7 +98,7 @@
   <button onclick="exportData()">Экспорт в Excel</button>
 
   <script>
-    // Переключение между разделами по вкладкам
+    // Переключение между разделами
     document.querySelectorAll('.tab').forEach(tab => {
       tab.addEventListener('click', () => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active-tab'));
@@ -108,7 +108,7 @@
       });
     });
 
-    // Функция для получения списка сотрудников
+    // Функции для управления сотрудниками
     async function fetchStaff() {
       const res = await fetch('/api/staff');
       const data = await res.json();
@@ -127,7 +127,6 @@
       });
     }
 
-    // Добавление сотрудника
     async function addStaff() {
       const name = document.getElementById('staff-name').value;
       const role = document.getElementById('staff-role').value;
@@ -144,7 +143,6 @@
       }
     }
 
-    // Обновление данных сотрудника
     async function updateStaff(id, field, value) {
       const res = await fetch('/api/staff');
       const staffList = await res.json();
@@ -159,7 +157,6 @@
       fetchStaff();
     }
 
-    // Удаление сотрудника
     async function deleteStaff(id) {
       if (confirm('Удалить сотрудника?')) {
         await fetch(`/api/staff/${id}`, { method: 'DELETE' });
@@ -225,7 +222,6 @@
       }
     }
 
-    // Функция экспорта данных в Excel
     function exportData() {
       window.location.href = '/api/export';
     }
