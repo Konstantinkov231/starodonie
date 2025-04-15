@@ -1,7 +1,9 @@
 from aiogram import Router, F
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import CallbackQuery, FSInputFile, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import Message
 
 import app.keyboards as kb
 from app.database import sqlite_db
@@ -495,3 +497,10 @@ async def answer_new_q18(callback_query: CallbackQuery, state: FSMContext):
     ])
     await callback_query.message.answer(final_text, parse_mode="HTML", reply_markup=forum_keyboard)
     await state.clear()
+
+
+@waiter.message(Command("mini_app"))
+async def cmd_test_note(message: Message):
+
+    await message.answer("график работы в этом приложении",
+                         reply_markup=kb.mini_app)
