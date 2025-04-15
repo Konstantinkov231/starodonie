@@ -1,41 +1,41 @@
-from flask import Flask, render_template, jsonify
-from datetime import datetime
+// server.js
+const express = require('express');
+const path = require('path');
+const app = express();
+const port = 5000;
 
-app = Flask(__name__)
+// Пример данных о рабочих сменах официантов
+const schedule = [
+  {
+    id: 1,
+    title: "Иван (Официант)",
+    start: "2025-04-16T08:00:00",
+    end: "2025-04-16T16:00:00"
+  },
+  {
+    id: 2,
+    title: "Пётр (Официант)",
+    start: "2025-04-16T12:00:00",
+    end: "2025-04-16T20:00:00"
+  },
+  {
+    id: 3,
+    title: "Мария (Официант)",
+    start: "2025-04-17T09:30:00",
+    end: "2025-04-17T17:30:00"
+  }
+];
 
-# Пример данных о рабочих сменах официантов.
-# В реальном проекте, вероятно, данные будут извлекаться из базы данных.
-# Формат даты ISO: "ГГГГ-ММ-ДДTHH:MM:SS"
-schedule = [
-    {
-        "id": 1,
-        "title": "Иван (Официант)",
-        "start": "2025-04-16T08:00:00",
-        "end": "2025-04-16T16:00:00"
-    },
-    {
-        "id": 2,
-        "title": "Пётр (Официант)",
-        "start": "2025-04-16T12:00:00",
-        "end": "2025-04-16T20:00:00"
-    },
-    {
-        "id": 3,
-        "title": "Мария (Официант)",
-        "start": "2025-04-17T09:30:00",
-        "end": "2025-04-17T17:30:00"
-    }
-]
+// Обслуживаем статические файлы из текущей директории.
+// Предполагается, что index.html находится в той же папке, что и server.js
+app.use(express.static(path.join(__dirname)));
 
-@app.route('/')
-def index():
-    # Главная страница с календарем
-    return render_template('index.html')
+// API эндпоинт для возвращения расписания
+app.get('/api/schedule', (req, res) => {
+  res.json(schedule);
+});
 
-@app.route('/api/schedule')
-def api_schedule():
-    # Возвращаем данные в формате JSON для FullCalendar
-    return jsonify(schedule)
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+// Запускаем сервер на адресе 0.0.0.0 чтобы он был доступен извне
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Server is running at http://0.0.0.0:${port}`);
+});
