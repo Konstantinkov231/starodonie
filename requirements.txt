@@ -24,3 +24,6 @@ setuptools
 typing-extensions
 wheel
 yarl
+Flask
+Flask-Session
+openpyxl

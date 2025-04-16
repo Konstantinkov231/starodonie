@@ -57,6 +57,17 @@ def sql_start():
             )   
        ''')
 
+    # === Новая таблица для хранения графика (пример) ===
+    cur.execute('''
+           CREATE TABLE IF NOT EXISTS schedules (
+               id INTEGER PRIMARY KEY AUTOINCREMENT,
+               user_id INTEGER,            -- tg_id или id пользователя
+               date TEXT,                  -- дата в формате 'YYYY-MM-DD'
+               working_hours TEXT,         -- можно хранить строкой, например "10:00-18:00"
+               day_type TEXT               -- "fixed", "approximate", или "none"
+           )
+       ''')
+
 # # staff: сотрудники(официанты, админы и т.д.)
 #     cur.execute('''
 #             CREATE TABLE IF NOT EXISTS staff (

@@ -1,0 +1,105 @@
+/* Основной стиль для мини‑приложения */
+
+/* Подключите этот файл в base.html: */
+/* <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"> */
+
+:root {
+  --primary-color: #4CAF50;
+  --secondary-color: #FFEB3B;
+  --bg-color: #f5f5f5;
+  --text-color: #333333;
+  --header-bg: #ffffff;
+  --button-bg: #4CAF50;
+  --button-hover-bg: #43A047;
+  --button-text: #ffffff;
+  --font-family: 'Roboto', sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family);
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+header {
+  background-color: var(--header-bg);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 1rem 2rem;
+  text-align: center;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--primary-color);
+}
+
+.content {
+  max-width: 1024px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+#calendar {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 1rem;
+}
+
+/* Стили для кнопок */
+.button,
+button,
+a.button {
+  display: inline-block;
+  background-color: var(--button-bg);
+  color: var(--button-text);
+  text-decoration: none;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin: 0.5rem 0;
+}
+
+.button:hover,
+button:hover,
+a.button:hover {
+  background-color: var(--button-hover-bg);
+}
+
+/* FullCalendar overrides */
+.fc .fc-daygrid-day {
+  transition: background-color 0.2s ease;
+}
+
+.fc .fc-daygrid-day:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Стили для всплывающих окон */
+.fc-popover {
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* Адаптивность */
+@media (max-width: 600px) {
+  header h1 {
+    font-size: 1.2rem;
+  }
+  .content {
+    margin: 1rem;
+    padding: 0;
+  }
+  .button,
+  button,
+  a.button {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+  }
+}
