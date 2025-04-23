@@ -1,25 +1,17 @@
 import sqlite3
 from datetime import datetime
 
-from aiogram import Router
-from aiogram.filters import Command
-from aiogram.types import Message
-
+# Инициализация глобальных переменных для базы и курсора
 base: sqlite3.Connection | None = None
 cur: sqlite3.Cursor | None = None
 
-SQL = Router()
-
 def sql_start():
-    """
-    Инициализируем (или обновляем) базу данных и создаём нужные таблицы,
-    если их ещё нет.
-    """
     global base, cur
+    # Открываем соединение
     base = sqlite3.connect('user.db')
     cur = base.cursor()
 
-    # Таблица для данных, собранных при /start
+    # Таблица пользователей, начального запуска
     cur.execute('''
         CREATE TABLE IF NOT EXISTS users_start (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -29,7 +21,7 @@ def sql_start():
         )
     ''')
 
-    # Таблица для карточек гостей
+    # Таблица карточек гостей
     cur.execute('''
         CREATE TABLE IF NOT EXISTS guest_cards (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,87 +34,58 @@ def sql_start():
         )
     ''')
 
-    # Новая таблица для официантов (waiters)
+    # Таблица официантов
     cur.execute('''
-            CREATE TABLE IF NOT EXISTS waiters (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                tg_id INTEGER UNIQUE
-                )
-            ''')
-    # Добавляем колонку name, только если её нет
-    cur.execute("PRAGMA table_info(waiters)")
-    columns = [row[1] for row in cur.fetchall()]
-    if 'name' not in columns:
-        cur.execute("ALTER TABLE waiters ADD COLUMN name TEXT")
-    # 2) создаём таблицу смен
-    cur.execute('''
-            CREATE TABLE IF NOT EXISTS shifts (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                waiter_id INTEGER NOT NULL,
-                date TEXT NOT NULL,
-                hours REAL DEFAULT 0,
-                tasks TEXT DEFAULT "",
-                FOREIGN KEY (waiter_id) REFERENCES waiters(id)
-            )
-        ''')
+        CREATE TABLE IF NOT EXISTS waiters (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tg_id INTEGER UNIQUE,
+            name TEXT DEFAULT ""
+        )
+    ''')
 
-    # Таблица для результатов теста
+    # Таблица результатов тестов
     cur.execute('''
-           CREATE TABLE IF NOT EXISTS test_results (
-                tg_id INTEGER PRIMARY KEY,
-                score INTEGER,
-                total INTEGER,
-                timestamp TEXT
-            )   
-       ''')
+        CREATE TABLE IF NOT EXISTS test_results (
+            tg_id INTEGER PRIMARY KEY,
+            score INTEGER,
+            total INTEGER,
+            timestamp TEXT
+        )
+    ''')
 
-    # === Новая таблица для хранения графика (пример) ===
+    # Таблица смен/графика
     cur.execute('''
-           CREATE TABLE IF NOT EXISTS schedules (
-               id INTEGER PRIMARY KEY AUTOINCREMENT,
-               user_id INTEGER,            -- tg_id или id пользователя
-               date TEXT,                  -- дата в формате 'YYYY-MM-DD'
-               working_hours TEXT,         -- можно хранить строкой, например "10:00-18:00"
-               day_type TEXT               -- "fixed", "approximate", или "none"
-           )
-       ''')
-
-# # staff: сотрудники(официанты, админы и т.д.)
-#     cur.execute('''
-#             CREATE TABLE IF NOT EXISTS staff (
-#                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-#                 name TEXT NOT NULL,
-#                 role TEXT NOT NULL,
-#                 rate REAL DEFAULT 0
-#             )
-#         ''')
-#
-# #shifts: смены
-#     cur.execute('''
-#             CREATE TABLE IF NOT EXISTS shifts (
-#                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-#                 staff_id INTEGER,
-#                 title TEXT,
-#                 start TEXT,
-#                 end TEXT,
-#                 FOREIGN KEY (staff_id) REFERENCES staff(id)
-#         )
-#     ''')
+        CREATE TABLE IF NOT EXISTS shifts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            waiter_id INTEGER,
+            date TEXT,
+            hours REAL DEFAULT 0,
+            tasks TEXT DEFAULT "",
+            FOREIGN KEY (waiter_id) REFERENCES waiters(id)
+        )
+    ''')
 
     base.commit()
 
-def tG_id(user_id: int):
-    # Обновляем поле tg_id в guest_cards для последней добавленной записи
-    cur.execute("UPDATE guest_cards SET tg_id = ? WHERE id = (SELECT MAX(id) FROM guest_cards)", (user_id,))
-    base.commit()
+# Получение официанта по Telegram ID
+def get_waiter_by_tg(tg_id: int):
+    cur.execute("SELECT id, name FROM waiters WHERE tg_id = ?", (tg_id,))
+    return cur.fetchone()
 
-# =============== Функции для таблицы users_start ===============
+def get_waiter_id_by_tg(tg_id: int) -> int | None:
+    row = get_waiter_by_tg(tg_id)
+    return row[0] if row else None
 
+# Добавление официанта
+def add_waiter(tg_id: int):
+    try:
+        cur.execute("INSERT OR IGNORE INTO waiters (tg_id) VALUES (?)", (tg_id,))
+        base.commit()
+    except Exception:
+        pass
+
+# ===== Таблица users_start =====
 def add_user_start(tg_id: int, username: str):
-    """
-    Сохраняем запись о том, что пользователь начал работу с ботом.
-    """
-    # Пример: записываем дату и время
     start_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     cur.execute('''
         INSERT INTO users_start (tg_id, username, start_date)
@@ -131,20 +94,11 @@ def add_user_start(tg_id: int, username: str):
     base.commit()
 
 def get_all_starts():
-    """
-    Получаем все записи из таблицы users_start.
-    """
     cur.execute("SELECT * FROM users_start")
     return cur.fetchall()
 
-# =============== Функции для таблицы guest_cards ===============
-
+# ===== Таблица guest_cards =====
 async def sql_add_guest_card(state):
-    """
-    Сохраняем карточку гостя из FSM-состояния.
-    Предполагается, что в state лежат поля:
-    name, number, photo, food, alerg.
-    """
     data = await state.get_data()
     cur.execute('''
         INSERT INTO guest_cards (name, phone, photo, food, alerg)
@@ -159,22 +113,22 @@ async def sql_add_guest_card(state):
     base.commit()
 
 def get_all_guest_cards():
-    """
-    Получаем все записи из таблицы guest_cards.
-    """
     cur.execute("SELECT * FROM guest_cards")
     return cur.fetchall()
 
-# Функция для таблицы waiters
-def add_waiter(tg_id: int):
-    try:
-        cur.execute("INSERT OR IGNORE INTO waiters (tg_id) VALUES (?)", (tg_id,))
-        base.commit()
-        print(f"Официант с tg_id {tg_id} успешно добавлен.")
-    except Exception as e:
-        print("Ошибка при добавлении официанта:", e)
+def tG_id(user_id: int):
+    cur.execute(
+        "UPDATE guest_cards SET tg_id = ? WHERE id = (SELECT MAX(id) FROM guest_cards)",
+        (user_id,)
+    )
+    base.commit()
 
-# Функция для тестовых результатов
+# ===== Таблица waiters =====
+def get_all_waiters():
+    cur.execute("SELECT tg_id FROM waiters")
+    return [row[0] for row in cur.fetchall()]
+
+# ===== Таблица test_results =====
 def add_test_result(tg_id: int, score: int, total: int):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     cur.execute('''
@@ -188,9 +142,8 @@ def get_all_test_results():
     return cur.fetchall()
 
 def get_all_test_results_with_username():
-    # Объединяем таблицы test_results и users_start по tg_id
     cur.execute('''
-        SELECT tr.id, tr.tg_id, us.username, tr.score, tr.total, tr.timestamp
+        SELECT tr.tg_id, us.username, tr.score, tr.total, tr.timestamp
         FROM test_results AS tr
         LEFT JOIN users_start AS us ON tr.tg_id = us.tg_id
         ORDER BY tr.timestamp DESC
@@ -198,127 +151,40 @@ def get_all_test_results_with_username():
     return cur.fetchall()
 
 def clear_test_results():
-    """
-    Удаляет все записи из таблицы тестовых результатов
-    и возвращает количество удалённых строк.
-    """
     cur.execute("DELETE FROM test_results")
     base.commit()
-    return cur.rowcount  # Вернёт число удалённых строк
+    return cur.rowcount
 
-# =============== Пример хендлера для /get_users (отладочный) ===============
-
-@SQL.message(Command('get_users'))
-async def get_users(message: Message):
-    """
-    Команда /get_users выводит информацию из таблицы guest_cards.
-    Вместо вывода file_id фотографии, бот отправляет саму фотографию с подписью.
-    """
-    cur.execute("SELECT * FROM guest_cards")
-    guest_cards = cur.fetchall()
-    starts = get_all_starts()
-    text = "=== Таблица users_start ===\n"
-    for row in starts:
-        # row: (id, tg_id, username, start_date)
-        text += f"ID={row[0]}, TG_ID={row[1]}, USERNAME={row[2]}, START={row[3]}\n"
-
-    if not guest_cards:
-        await message.answer("База данных пуста.")
-    else:
-        for card in guest_cards:
-            # Предполагается, что структура: (id, tg_id, name, phone, photo, food, alerg)
-            caption = (
-                f"Имя: {card[2]}\n"
-                f"Номер: {card[3]}\n"
-                f"Любимая еда: {card[5]}\n"
-                f"Аллергии: {card[6]}"
-            )
-            # Отправляем фотографию с подписью
-            await message.answer_photo(photo=card[4], caption=caption)
-
-@SQL.message(Command('searchguest'))
-async def search_guest(message: Message):
-    """
-    Команда /searchguest принимает поисковый запрос (имя или номер телефона) и ищет гостя в таблице guest_cards.
-    Пример использования: /searchguest Иван или /searchguest 1234567890
-    """
-    # Извлекаем аргументы команды через partition
-    query = message.text.partition(' ')[2].strip()
-    if not query:
-        await message.answer("Использование: /searchguest <имя или номер телефона>")
-        return
-
-    # Формируем запрос с поиском по имени и номеру (с использованием LIKE)
-    sql_query = "SELECT * FROM guest_cards WHERE name LIKE ? OR phone LIKE ?"
-    like_query = f"%{query}%"
-    cur.execute(sql_query, (like_query, like_query))
-    results = cur.fetchall()
-
-    if not results:
-        await message.answer("Гость не найден.")
-    else:
-        for card in results:
-            # Структура карточки: (id, tg_id, name, phone, photo, food, alerg)
-            caption = (
-                f"Имя: {card[2]}\n"
-                f"Номер: {card[3]}\n"
-                f"Любимая еда: {card[5]}\n"
-                f"Аллергии: {card[6]}"
-            )
-            await message.answer_photo(photo=card[4], caption=caption)
-
-def add_waiter(tg_id: int):
-    """
-    Добавляет Telegram ID официанта в таблицу waiters,
-    если запись с таким tg_id отсутствует.
-    """
-    try:
-        cur.execute("INSERT OR IGNORE INTO waiters (tg_id) VALUES (?)", (tg_id,))
-        base.commit()
-        print(f"Официант с tg_id {tg_id} успешно добавлен.")
-    except Exception as e:
-        print("Ошибка при добавлении официанта:", e)
-
-
+# ===== Управление сменами =====
 def add_shift(waiter_id: int, date: str):
-    cur.execute("INSERT INTO shifts (waiter_id, date) VALUES (?, ?)", (waiter_id, date))
+    cur.execute(
+        "INSERT OR IGNORE INTO shifts (waiter_id, date) VALUES (?, ?)",
+        (waiter_id, date)
+    )
     base.commit()
 
 def set_shift_hours(waiter_id: int, date: str, hours: float):
-    cur.execute("""
-      UPDATE shifts
-      SET hours = ?
-      WHERE waiter_id = ? AND date = ?
-    """, (hours, waiter_id, date))
+    cur.execute(
+        "UPDATE shifts SET hours = ? WHERE waiter_id = ? AND date = ?",
+        (hours, waiter_id, date)
+    )
+    base.commit()
+
+def set_shift_tasks(waiter_id: int, date: str, tasks: str):
+    cur.execute(
+        "UPDATE shifts SET tasks = ? WHERE waiter_id = ? AND date = ?",
+        (tasks, waiter_id, date)
+    )
     base.commit()
 
 def get_shifts_for(waiter_id: int):
-    cur.execute("SELECT date, hours, tasks FROM shifts WHERE waiter_id = ?", (waiter_id,))
+    cur.execute(
+        "SELECT date, hours, tasks FROM shifts WHERE waiter_id = ?", (waiter_id,)
+    )
     return {row[0]: {"hours": row[1], "tasks": row[2]} for row in cur.fetchall()}
 
 def get_all_shifts():
-    cur.execute("SELECT w.name, s.date, s.hours FROM shifts s JOIN waiters w ON s.waiter_id = w.id")
+    cur.execute(
+        "SELECT w.name, s.date, s.hours, s.tasks FROM shifts s JOIN waiters w ON s.waiter_id = w.id"
+    )
     return cur.fetchall()
-
-def get_all_waiters():
-    """
-    Возвращает список кортежей (id, name) всех официантов.
-    """
-    cur.execute("SELECT id, name FROM waiters")
-    return cur.fetchall()
-
-def get_waiter_by_tg(tg_id: int):
-    """
-    Возвращает кортеж (id, name) официанта по его Telegram ID, или None.
-    """
-    cur.execute("SELECT id, name FROM waiters WHERE tg_id = ?", (tg_id,))
-    return cur.fetchone()
-
-def get_waiter_id_by_tg(tg_id: int) -> int | None:
-    """
-    Возвращает только ID официанта по его Telegram ID, или None.
-    """
-    row = get_waiter_by_tg(tg_id)
-    return row[0] if row else None
-
-
