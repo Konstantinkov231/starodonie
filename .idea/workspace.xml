@@ -4,9 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="47f13457-59eb-446c-a9ff-cc9e2b0e2e38" name="Changes" comment="а">
-      <change beforePath="$PROJECT_DIR$/app/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/admin.py" afterDir="false" />
-    </list>
+    <list default="true" id="47f13457-59eb-446c-a9ff-cc9e2b0e2e38" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -91,13 +89,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1729617431391</updated>
-    </task>
-    <task id="LOCAL-00001" summary="коммит тест">
-      <created>1744488192341</created>
-      <option name="number" value="00001" />
-      <option name="presentableId" value="LOCAL-00001" />
-      <option name="project" value="LOCAL" />
-      <updated>1744488192341</updated>
     </task>
     <task id="LOCAL-00002" summary="обновление теста, редакция БД, ЕБУЧАЯ b">
       <created>1744499489363</created>
@@ -435,7 +426,14 @@
       <option name="project" value="LOCAL" />
       <updated>1745451462015</updated>
     </task>
-    <option name="localTasksCounter" value="50" />
+    <task id="LOCAL-00050" summary="оа">
+      <created>1745451660427</created>
+      <option name="number" value="00050" />
+      <option name="presentableId" value="LOCAL-00050" />
+      <option name="project" value="LOCAL" />
+      <updated>1745451660495</updated>
+    </task>
+    <option name="localTasksCounter" value="51" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -462,7 +460,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="коммит тест" />
     <MESSAGE value="обновление теста, редакция БД, ЕБУЧАЯ b" />
     <MESSAGE value="обработчики теста + &#10;обновление теста, редакция БД, ЕБУЧАЯ b" />
     <MESSAGE value="ещё одно блядское обновление" />
@@ -487,7 +484,8 @@
     <MESSAGE value="бд" />
     <MESSAGE value="исправление ошибки в хендлере" />
     <MESSAGE value="переписанная админка" />
-    <option name="LAST_COMMIT_MESSAGE" value="переписанная админка" />
+    <MESSAGE value="оа" />
+    <option name="LAST_COMMIT_MESSAGE" value="оа" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
 </project>
