@@ -4,9 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="47f13457-59eb-446c-a9ff-cc9e2b0e2e38" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/app/database/sqlite_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/database/sqlite_db.py" afterDir="false" />
-    </list>
+    <list default="true" id="47f13457-59eb-446c-a9ff-cc9e2b0e2e38" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -358,7 +356,21 @@
       <option name="project" value="LOCAL" />
       <updated>1745448290008</updated>
     </task>
-    <option name="localTasksCounter" value="39" />
+    <task id="LOCAL-00039" summary="бд">
+      <created>1745448436271</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1745448436271</updated>
+    </task>
+    <task id="LOCAL-00040" summary="исправление ошибки в хендлере">
+      <created>1745448735177</created>
+      <option name="number" value="00040" />
+      <option name="presentableId" value="LOCAL-00040" />
+      <option name="project" value="LOCAL" />
+      <updated>1745448735179</updated>
+    </task>
+    <option name="localTasksCounter" value="41" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -408,7 +420,8 @@
     <MESSAGE value="календарь" />
     <MESSAGE value="админка" />
     <MESSAGE value="бд" />
-    <option name="LAST_COMMIT_MESSAGE" value="бд" />
+    <MESSAGE value="исправление ошибки в хендлере" />
+    <option name="LAST_COMMIT_MESSAGE" value="исправление ошибки в хендлере" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
 </project>
