@@ -49,7 +49,11 @@ def sql_start():
                 tg_id INTEGER UNIQUE
                 )
             ''')
-    cur.execute("ALTER TABLE waiters ADD COLUMN name TEXT")  # если SQLite не поддерживает ALTER, можно сделать CREATE TABLE заново
+    # Добавляем колонку name, только если её нет
+    cur.execute("PRAGMA table_info(waiters)")
+    columns = [row[1] for row in cur.fetchall()]
+    if 'name' not in columns:
+        cur.execute("ALTER TABLE waiters ADD COLUMN name TEXT")
     # 2) создаём таблицу смен
     cur.execute('''
             CREATE TABLE IF NOT EXISTS shifts (
