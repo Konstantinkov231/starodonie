@@ -5,6 +5,9 @@ from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
+base: sqlite3.Connection | None = None
+cur: sqlite3.Cursor | None = None
+
 SQL = Router()
 
 def sql_start():
@@ -44,6 +47,18 @@ def sql_start():
             CREATE TABLE IF NOT EXISTS waiters (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 tg_id INTEGER UNIQUE
+                )
+            ''')
+    cur.execute("ALTER TABLE waiters ADD COLUMN name TEXT")  # если SQLite не поддерживает ALTER, можно сделать CREATE TABLE заново
+    # 2) создаём таблицу смен
+    cur.execute('''
+            CREATE TABLE IF NOT EXISTS shifts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                waiter_id INTEGER NOT NULL,
+                date TEXT NOT NULL,
+                hours REAL DEFAULT 0,
+                tasks TEXT DEFAULT "",
+                FOREIGN KEY (waiter_id) REFERENCES waiters(id)
             )
         ''')
 
@@ -259,4 +274,47 @@ def add_waiter(tg_id: int):
         print(f"Официант с tg_id {tg_id} успешно добавлен.")
     except Exception as e:
         print("Ошибка при добавлении официанта:", e)
+
+
+def add_shift(waiter_id: int, date: str):
+    cur.execute("INSERT INTO shifts (waiter_id, date) VALUES (?, ?)", (waiter_id, date))
+    base.commit()
+
+def set_shift_hours(waiter_id: int, date: str, hours: float):
+    cur.execute("""
+      UPDATE shifts
+      SET hours = ?
+      WHERE waiter_id = ? AND date = ?
+    """, (hours, waiter_id, date))
+    base.commit()
+
+def get_shifts_for(waiter_id: int):
+    cur.execute("SELECT date, hours, tasks FROM shifts WHERE waiter_id = ?", (waiter_id,))
+    return {row[0]: {"hours": row[1], "tasks": row[2]} for row in cur.fetchall()}
+
+def get_all_shifts():
+    cur.execute("SELECT w.name, s.date, s.hours FROM shifts s JOIN waiters w ON s.waiter_id = w.id")
+    return cur.fetchall()
+
+def get_all_waiters():
+    """
+    Возвращает список кортежей (id, name) всех официантов.
+    """
+    cur.execute("SELECT id, name FROM waiters")
+    return cur.fetchall()
+
+def get_waiter_by_tg(tg_id: int):
+    """
+    Возвращает кортеж (id, name) официанта по его Telegram ID, или None.
+    """
+    cur.execute("SELECT id, name FROM waiters WHERE tg_id = ?", (tg_id,))
+    return cur.fetchone()
+
+def get_waiter_id_by_tg(tg_id: int) -> int | None:
+    """
+    Возвращает только ID официанта по его Telegram ID, или None.
+    """
+    row = get_waiter_by_tg(tg_id)
+    return row[0] if row else None
+
 
