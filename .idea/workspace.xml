@@ -93,20 +93,6 @@
       <option name="presentableId" value="Default" />
       <updated>1729617431391</updated>
     </task>
-    <task id="LOCAL-00028" summary="инлайн кнопка">
-      <created>1745134985927</created>
-      <option name="number" value="00028" />
-      <option name="presentableId" value="LOCAL-00028" />
-      <option name="project" value="LOCAL" />
-      <updated>1745134985927</updated>
-    </task>
-    <task id="LOCAL-00029" summary="инлайн кнопка">
-      <created>1745157139309</created>
-      <option name="number" value="00029" />
-      <option name="presentableId" value="LOCAL-00029" />
-      <option name="project" value="LOCAL" />
-      <updated>1745157139312</updated>
-    </task>
     <task id="LOCAL-00030" summary="инлайн кнопка">
       <created>1745356417091</created>
       <option name="number" value="00030" />
@@ -436,7 +422,21 @@
       <option name="project" value="LOCAL" />
       <updated>1745518861353</updated>
     </task>
-    <option name="localTasksCounter" value="77" />
+    <task id="LOCAL-00077" summary="о боже">
+      <created>1745521301892</created>
+      <option name="number" value="00077" />
+      <option name="presentableId" value="LOCAL-00077" />
+      <option name="project" value="LOCAL" />
+      <updated>1745521301896</updated>
+    </task>
+    <task id="LOCAL-00078" summary="о боже">
+      <created>1745521531646</created>
+      <option name="number" value="00078" />
+      <option name="presentableId" value="LOCAL-00078" />
+      <option name="project" value="LOCAL" />
+      <updated>1745521531648</updated>
+    </task>
+    <option name="localTasksCounter" value="79" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
