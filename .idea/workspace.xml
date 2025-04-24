@@ -92,20 +92,6 @@
       <option name="presentableId" value="Default" />
       <updated>1729617431391</updated>
     </task>
-    <task id="LOCAL-00019" summary="исправление ссылок">
-      <created>1744753820045</created>
-      <option name="number" value="00019" />
-      <option name="presentableId" value="LOCAL-00019" />
-      <option name="project" value="LOCAL" />
-      <updated>1744753820046</updated>
-    </task>
-    <task id="LOCAL-00020" summary="исправление ссылок">
-      <created>1744756820461</created>
-      <option name="number" value="00020" />
-      <option name="presentableId" value="LOCAL-00020" />
-      <option name="project" value="LOCAL" />
-      <updated>1744756820462</updated>
-    </task>
     <task id="LOCAL-00021" summary="исправление ссылок">
       <created>1744756926078</created>
       <option name="number" value="00021" />
@@ -435,7 +421,21 @@
       <option name="project" value="LOCAL" />
       <updated>1745513939816</updated>
     </task>
-    <option name="localTasksCounter" value="68" />
+    <task id="LOCAL-00068" summary="оа">
+      <created>1745514353042</created>
+      <option name="number" value="00068" />
+      <option name="presentableId" value="LOCAL-00068" />
+      <option name="project" value="LOCAL" />
+      <updated>1745514353046</updated>
+    </task>
+    <task id="LOCAL-00069" summary="о боже">
+      <created>1745514595335</created>
+      <option name="number" value="00069" />
+      <option name="presentableId" value="LOCAL-00069" />
+      <option name="project" value="LOCAL" />
+      <updated>1745514595339</updated>
+    </task>
+    <option name="localTasksCounter" value="70" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -462,7 +462,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="обновление теста, редакция БД, ЕБУЧАЯ b" />
     <MESSAGE value="обработчики теста + &#10;обновление теста, редакция БД, ЕБУЧАЯ b" />
     <MESSAGE value="ещё одно блядское обновление" />
     <MESSAGE value="ссылка на форум" />
@@ -487,7 +486,8 @@
     <MESSAGE value="исправление ошибки в хендлере" />
     <MESSAGE value="переписанная админка" />
     <MESSAGE value="оа" />
-    <option name="LAST_COMMIT_MESSAGE" value="оа" />
+    <MESSAGE value="о боже" />
+    <option name="LAST_COMMIT_MESSAGE" value="о боже" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
 </project>
