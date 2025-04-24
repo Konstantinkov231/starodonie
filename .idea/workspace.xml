@@ -5,7 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="47f13457-59eb-446c-a9ff-cc9e2b0e2e38" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/admin.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -91,13 +91,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1729617431391</updated>
-    </task>
-    <task id="LOCAL-00064" summary="оа">
-      <created>1745512470012</created>
-      <option name="number" value="00064" />
-      <option name="presentableId" value="LOCAL-00064" />
-      <option name="project" value="LOCAL" />
-      <updated>1745512470014</updated>
     </task>
     <task id="LOCAL-00065" summary="оа">
       <created>1745512900798</created>
@@ -435,7 +428,14 @@
       <option name="project" value="LOCAL" />
       <updated>1745536208888</updated>
     </task>
-    <option name="localTasksCounter" value="113" />
+    <task id="LOCAL-00113" summary="похоже это победа">
+      <created>1745536673019</created>
+      <option name="number" value="00113" />
+      <option name="presentableId" value="LOCAL-00113" />
+      <option name="project" value="LOCAL" />
+      <updated>1745536673020</updated>
+    </task>
+    <option name="localTasksCounter" value="114" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -462,7 +462,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="ещё одно блядское обновление" />
     <MESSAGE value="ссылка на форум" />
     <MESSAGE value="изменение отображение результатов" />
     <MESSAGE value="ну и ещё немного" />
@@ -487,7 +486,8 @@
     <MESSAGE value="оа" />
     <MESSAGE value="о боже" />
     <MESSAGE value="к" />
-    <option name="LAST_COMMIT_MESSAGE" value="к" />
+    <MESSAGE value="похоже это победа" />
+    <option name="LAST_COMMIT_MESSAGE" value="похоже это победа" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
 </project>
