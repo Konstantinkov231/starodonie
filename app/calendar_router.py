@@ -1,3 +1,6 @@
+# app/calendar_router.py
+
+import os
 from datetime import datetime
 
 from aiogram import Router, F
@@ -16,7 +19,7 @@ from app.utils.calendar import make_calendar
 
 calendar_router = Router()
 
-# Админы для фильтра (чтобы скрывать кнопки им)
+# Локальный список админов, чтобы кнопки не мешались им
 ADMIN_IDS = [2015462319, 1773695867]
 def is_admin(user_id: int) -> bool:
     return user_id in ADMIN_IDS
@@ -33,7 +36,7 @@ class Forecast(StatesGroup):
 @calendar_router.message(Command("calendar"))
 async def cmd_calendar(message: Message, state: FSMContext):
     waiter = get_waiter_by_tg(message.from_user.id)
-    # Если официант новый или имя не задано — запрашиваем имя
+    # Если новый официант или имя не задано
     if not waiter or not waiter[1]:
         if not waiter:
             add_waiter(message.from_user.id)
@@ -41,12 +44,11 @@ async def cmd_calendar(message: Message, state: FSMContext):
         await state.set_state(FillName.waiting_for_name)
         return
 
-    # Показываем календарь с собственными сменами
+    # Показываем календарь его смен
     waiter_id, _ = waiter
     shifts = get_shifts_for(waiter_id)
     kb = make_calendar(datetime.today().year, datetime.today().month, set(shifts.keys()))
-
-    # Кнопка для прогноза смен
+    # Добавляем кнопку прогноза смены
     kb.inline_keyboard.append([
         InlineKeyboardButton(text="📅 Прогнозировать смену", callback_data="FORECAST_START")
     ])
@@ -56,7 +58,6 @@ async def cmd_calendar(message: Message, state: FSMContext):
 async def process_name(message: Message, state: FSMContext):
     name = message.text.strip()
     tg = message.from_user.id
-    # Сохраняем имя
     from app.database.sqlite_db import cur, base
     cur.execute("UPDATE waiters SET name = ? WHERE tg_id = ?", (name, tg))
     base.commit()
@@ -71,13 +72,13 @@ async def process_name(message: Message, state: FSMContext):
     await state.clear()
     await message.answer("", reply_markup=kb)
 
-# Обычная навигация по календарю (предыдущий/следующий месяц)
+# Навигация по месяцам (для официанта)
 @calendar_router.callback_query(lambda q: not is_admin(q.from_user.id) and q.data.startswith("CAL_PREV|"))
 async def prev_month(query: CallbackQuery):
     _, y, m = query.data.split("|")
     y, m = int(y), int(m) - 1
     if m == 0:
-        y -= 1; m = 12
+        y, m = y - 1, 12
     waiter_id = get_waiter_id_by_tg(query.from_user.id)
     shifts = get_shifts_for(waiter_id)
     kb = make_calendar(y, m, set(shifts.keys()))
@@ -91,7 +92,7 @@ async def next_month(query: CallbackQuery):
     _, y, m = query.data.split("|")
     y, m = int(y), int(m) + 1
     if m == 13:
-        y += 1; m = 1
+        y, m = y + 1, 1
     waiter_id = get_waiter_id_by_tg(query.from_user.id)
     shifts = get_shifts_for(waiter_id)
     kb = make_calendar(y, m, set(shifts.keys()))
@@ -106,7 +107,6 @@ async def cancel_calendar(query: CallbackQuery):
 
 @calendar_router.callback_query(lambda q: not is_admin(q.from_user.id) and q.data.startswith("CAL_DAY|"))
 async def show_shift_info(query: CallbackQuery):
-    # Посмотреть детали смены
     _, date_str = query.data.split("|", 1)
     waiter_id = get_waiter_id_by_tg(query.from_user.id)
     shifts = get_shifts_for(waiter_id)
@@ -127,7 +127,6 @@ async def show_shift_info(query: CallbackQuery):
 # --- Прогнозирование смены ---
 @calendar_router.callback_query(F.data == "FORECAST_START")
 async def forecast_start(query: CallbackQuery, state: FSMContext):
-    # Шаг 1: выбираем дату
     from app.utils.calendar import make_calendar
     today = datetime.today()
     kb = make_calendar(today.year, today.month, set())
@@ -136,7 +135,6 @@ async def forecast_start(query: CallbackQuery, state: FSMContext):
 
 @calendar_router.callback_query(F.data.startswith("CAL_DAY|"), F.state == Forecast.ChoosingDate)
 async def forecast_choose_day(query: CallbackQuery, state: FSMContext):
-    # Шаг 2: подтверждение
     _, date_str = query.data.split("|", 1)
     await state.update_data(forecast_date=date_str)
     kb = InlineKeyboardMarkup(inline_keyboard=[
@@ -144,9 +142,22 @@ async def forecast_choose_day(query: CallbackQuery, state: FSMContext):
         [InlineKeyboardButton(text="❌ Не смогу", callback_data="FORECAST_NO")],
     ])
     await state.set_state(Forecast.ConfirmAvailability)
-    await query.message.edit_text(f"Выбрана дата {date_str}. Вы сможете выйти?", reply_markup=kb)
+    await query.message.edit_text(f"Дата: {date_str}\nВы сможете выйти?", reply_markup=kb)
 
 @calendar_router.callback_query(F.data.in_(["FORECAST_YES", "FORECAST_NO"]), F.state == Forecast.ConfirmAvailability)
 async def forecast_result(query: CallbackQuery, state: FSMContext):
     data = await state.get_data()
-    date_str = data['forecast
+    date_str = data['forecast_date']
+    available = (query.data == "FORECAST_YES")
+    user = query.from_user
+
+    admin_chat = os.getenv("CHAT_ID")
+    text = (
+        f"📣 Прогноз смены:\n"
+        f"Официант: {user.full_name} (@{user.username})\n"
+        f"Дата: {date_str}\n"
+        f"{'✅ Смогу выйти' if available else '❌ Не смогу выйти'}"
+    )
+    await query.bot.send_message(admin_chat, text)
+    await query.message.answer("Спасибо! Прогноз отправлен админу.")
+    await state.clear()
