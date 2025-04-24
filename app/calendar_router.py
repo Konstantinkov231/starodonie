@@ -1,12 +1,13 @@
 from datetime import datetime
 
-from aiogram import Router
+from aiogram import Router, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import CallbackQuery, Message
 
-from app.admin import user_is_admin
+# Импортируем is_admin
+from app.admin import is_admin
 from app.database.sqlite_db import (
     get_waiter_by_tg,
     get_waiter_id_by_tg,
@@ -59,8 +60,11 @@ async def _show_calendar(event_source, waiter_id: int, year: int = None, month: 
     kb = make_calendar(year, month, set(shifts.keys()))
     await event_source.answer("Выберите дату записи:", reply_markup=kb)
 
-# Общий хендлер для навигации и просмотра смен (только обычные пользователи)
-@calendar_router.callback_query(lambda q: not user_is_admin(q.from_user.id) and q.data.startswith("CAL_"))
+# Навигация и клики по датам (не-админ)
+@calendar_router.callback_query(
+    F.data.startswith("CAL_"),
+    lambda q: not is_admin(q.from_user.id)
+)
 async def calendar_handler(query: CallbackQuery, state: FSMContext):
     parts = query.data.split("|")
     action = parts[0]
