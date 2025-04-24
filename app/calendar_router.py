@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import CallbackQuery, Message
 
-from app.admin import is_admin
+from app.admin import user_is_admin
 from app.database.sqlite_db import (
     get_waiter_by_tg,
     get_waiter_id_by_tg,
@@ -72,7 +72,7 @@ async def _show_personal_calendar(source, waiter_id: int, year: int = None, mont
     await source.answer("Ваш личный календарь. Выберите дату:", reply_markup=cal_markup)
 
 # --- Handler for waiter navigation and selecting day ---
-@calendar_router.callback_query(lambda q: not is_admin(q.from_user.id) and q.data.startswith("CAL_"))
+@calendar_router.callback_query(lambda q: not user_is_admin(q.from_user.id) and q.data.startswith("CAL_"))
 async def personal_calendar_handler(query: CallbackQuery, state: FSMContext):
     """
     Обработка нажатий обычного официанта на календарь.
@@ -81,10 +81,12 @@ async def personal_calendar_handler(query: CallbackQuery, state: FSMContext):
     parts = query.data.split("|")
     action = parts[0]
     waiter_id = get_waiter_id_by_tg(query.from_user.id)
+
     # Отмена
     if action == "CAL_CANCEL":
         await query.message.delete()
         return
+
     # Переход между месяцами
     if action in ("CAL_PREV", "CAL_NEXT"):
         year, month = map(int, parts[1:])
@@ -104,6 +106,7 @@ async def personal_calendar_handler(query: CallbackQuery, state: FSMContext):
             reply_markup=make_calendar(year, month, set(shifts.keys()))
         )
         return
+
     # Выбор дня
     if action == "CAL_DAY":
         date_str = parts[1]
@@ -121,3 +124,5 @@ async def personal_calendar_handler(query: CallbackQuery, state: FSMContext):
             text = "На эту дату нет смен."
         await query.message.delete()
         await query.message.answer(text)
+
+# --- Админские календари обрабатываются только в admin.py ---
