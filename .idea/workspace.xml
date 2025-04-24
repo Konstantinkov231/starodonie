@@ -92,13 +92,6 @@
       <option name="presentableId" value="Default" />
       <updated>1729617431391</updated>
     </task>
-    <task id="LOCAL-00013" summary="создание правок на приложение">
-      <created>1744737853755</created>
-      <option name="number" value="00013" />
-      <option name="presentableId" value="LOCAL-00013" />
-      <option name="project" value="LOCAL" />
-      <updated>1744737853757</updated>
-    </task>
     <task id="LOCAL-00014" summary="создание отдельного файла вёрстки">
       <created>1744745942439</created>
       <option name="number" value="00014" />
@@ -435,7 +428,14 @@
       <option name="project" value="LOCAL" />
       <updated>1745509636420</updated>
     </task>
-    <option name="localTasksCounter" value="62" />
+    <task id="LOCAL-00062" summary="оа">
+      <created>1745511540014</created>
+      <option name="number" value="00062" />
+      <option name="presentableId" value="LOCAL-00062" />
+      <option name="project" value="LOCAL" />
+      <updated>1745511540016</updated>
+    </task>
+    <option name="localTasksCounter" value="63" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
