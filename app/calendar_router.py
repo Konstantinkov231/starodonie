@@ -21,15 +21,9 @@ calendar_router = Router()
 class FillName(StatesGroup):
     waiting_for_name = State()
 
-# Состояния для официанта при работе с календарем (только просмотр)
-
 # Точка входа: пользователь вводит /calendar
 @calendar_router.message(Command("calendar"))
 async def cmd_calendar(message: Message, state: FSMContext):
-    """
-    Запуск личного календаря официанта.
-    Если нет записи в БД, просим ввести имя.
-    """
     waiter = get_waiter_by_tg(message.from_user.id)
     if not waiter:
         add_waiter(message.from_user.id)
@@ -43,7 +37,6 @@ async def cmd_calendar(message: Message, state: FSMContext):
         await state.set_state(FillName.waiting_for_name)
         return
 
-    # Показать календарь официанта
     await _show_calendar(message, waiter_id)
 
 @calendar_router.message(FillName.waiting_for_name)
@@ -66,19 +59,17 @@ async def _show_calendar(event_source, waiter_id: int, year: int = None, month: 
     kb = make_calendar(year, month, set(shifts.keys()))
     await event_source.answer("Выберите дату записи:", reply_markup=kb)
 
-# --- Обработчики только для официанта: навигация и просмотр кадастра ---
+# Общий хендлер для навигации и просмотра смен (только обычные пользователи)
 @calendar_router.callback_query(lambda q: not user_is_admin(q.from_user.id) and q.data.startswith("CAL_"))
 async def calendar_handler(query: CallbackQuery, state: FSMContext):
     parts = query.data.split("|")
     action = parts[0]
     waiter_id = get_waiter_id_by_tg(query.from_user.id)
 
-    # Отмена
     if action == "CAL_CANCEL":
         await query.message.delete()
         return
 
-    # Переход между месяцами
     if action in ("CAL_PREV", "CAL_NEXT"):
         year, month = map(int, parts[1:])
         if action == "CAL_PREV":
@@ -96,7 +87,6 @@ async def calendar_handler(query: CallbackQuery, state: FSMContext):
         )
         return
 
-    # Просмотр смены
     if action == "CAL_DAY":
         date_str = parts[1]
         shifts = get_shifts_for(waiter_id)
