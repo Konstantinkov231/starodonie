@@ -4,9 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="47f13457-59eb-446c-a9ff-cc9e2b0e2e38" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/app/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/admin.py" afterDir="false" />
-    </list>
+    <list default="true" id="47f13457-59eb-446c-a9ff-cc9e2b0e2e38" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -91,13 +89,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1729617431391</updated>
-    </task>
-    <task id="LOCAL-00059" summary="оа">
-      <created>1745509117311</created>
-      <option name="number" value="00059" />
-      <option name="presentableId" value="LOCAL-00059" />
-      <option name="project" value="LOCAL" />
-      <updated>1745509117313</updated>
     </task>
     <task id="LOCAL-00060" summary="оа">
       <created>1745509591194</created>
@@ -435,7 +426,14 @@
       <option name="project" value="LOCAL" />
       <updated>1745534500726</updated>
     </task>
-    <option name="localTasksCounter" value="108" />
+    <task id="LOCAL-00108" summary="к">
+      <created>1745535182184</created>
+      <option name="number" value="00108" />
+      <option name="presentableId" value="LOCAL-00108" />
+      <option name="project" value="LOCAL" />
+      <updated>1745535182187</updated>
+    </task>
+    <option name="localTasksCounter" value="109" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -462,7 +460,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="обработчики теста + &#10;обновление теста, редакция БД, ЕБУЧАЯ b" />
     <MESSAGE value="ещё одно блядское обновление" />
     <MESSAGE value="ссылка на форум" />
     <MESSAGE value="изменение отображение результатов" />
@@ -487,7 +484,8 @@
     <MESSAGE value="переписанная админка" />
     <MESSAGE value="оа" />
     <MESSAGE value="о боже" />
-    <option name="LAST_COMMIT_MESSAGE" value="о боже" />
+    <MESSAGE value="к" />
+    <option name="LAST_COMMIT_MESSAGE" value="к" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
 </project>
