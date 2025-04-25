@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="47f13457-59eb-446c-a9ff-cc9e2b0e2e38" name="Changes" comment="" />
+    <list default="true" id="47f13457-59eb-446c-a9ff-cc9e2b0e2e38" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -89,20 +92,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1729617431391</updated>
-    </task>
-    <task id="LOCAL-00071" summary="о боже">
-      <created>1745515725648</created>
-      <option name="number" value="00071" />
-      <option name="presentableId" value="LOCAL-00071" />
-      <option name="project" value="LOCAL" />
-      <updated>1745515725650</updated>
-    </task>
-    <task id="LOCAL-00072" summary="о боже">
-      <created>1745517924210</created>
-      <option name="number" value="00072" />
-      <option name="presentableId" value="LOCAL-00072" />
-      <option name="project" value="LOCAL" />
-      <updated>1745517924219</updated>
     </task>
     <task id="LOCAL-00073" summary="о боже">
       <created>1745518043214</created>
@@ -433,7 +422,21 @@
       <option name="project" value="LOCAL" />
       <updated>1745539717842</updated>
     </task>
-    <option name="localTasksCounter" value="120" />
+    <task id="LOCAL-00120" summary="похоже это победа">
+      <created>1745540018525</created>
+      <option name="number" value="00120" />
+      <option name="presentableId" value="LOCAL-00120" />
+      <option name="project" value="LOCAL" />
+      <updated>1745540018527</updated>
+    </task>
+    <task id="LOCAL-00121" summary="похоже это победа">
+      <created>1745540123130</created>
+      <option name="number" value="00121" />
+      <option name="presentableId" value="LOCAL-00121" />
+      <option name="project" value="LOCAL" />
+      <updated>1745540123136</updated>
+    </task>
+    <option name="localTasksCounter" value="122" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
