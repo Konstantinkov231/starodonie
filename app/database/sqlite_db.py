@@ -72,6 +72,16 @@ def sql_start():
         )
     ''')
 
+    # tips
+    cur.execute("""
+            CREATE TABLE IF NOT EXISTS tips (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                waiter_id INTEGER, date TEXT, amount REAL,
+                UNIQUE(waiter_id,date),
+                FOREIGN KEY(waiter_id) REFERENCES waiters(id)
+            )
+        """)
+
     base.commit()
 
 # ================== users_start ==================
