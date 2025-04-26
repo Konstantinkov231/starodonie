@@ -11,7 +11,7 @@ from decimal import Decimal
 from typing import Set
 
 from aiogram import Router, F
-from aiogram.exceptions import TelegramBadRequest, MessageNotModified
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
@@ -134,7 +134,7 @@ async def _send_calendar(m: Message, uid: int, edit: bool = False):
             await m.edit_text("Ваш календарь:", reply_markup=kb)
         else:
             await m.answer("Ваш календарь:", reply_markup=kb)
-    except (TelegramBadRequest, MessageNotModified):
+    except TelegramBadRequest:
         await m.answer("Ваш календарь:", reply_markup=kb)
 
 
@@ -290,10 +290,9 @@ async def forecast_send(q: CallbackQuery, state: FSMContext):
     await q.message.edit_text("Спасибо! Ваш прогноз учтён.", reply_markup=WAITER_MENU)
     await state.clear()
 
-
-# ────────────────────────────────────────────────────────────────
-# TIPS BLOCK
-# ────────────────────────────────────────────────────────────────
+# ───────────────────────────────────────────────
+#   TIPS block
+# ───────────────────────────────────────────────
 
 @router.callback_query(F.data == "TIPS_START")
 async def tips_start(q: CallbackQuery, state: FSMContext):
@@ -325,7 +324,7 @@ async def tips_save(msg: Message, state: FSMContext):
         ]
     )
     await msg.answer(
-        f"Записано {amount:.2f} ₽.\nВсего за {ym}: {total:.2f} ₽", reply_markup=kb
+        f"Записано {amount:.2f} ₽. Всего за {ym}: {total:.2f} ₽", reply_markup=kb
     )
     await state.clear()
 
