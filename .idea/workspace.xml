@@ -92,13 +92,6 @@
       <option name="presentableId" value="Default" />
       <updated>1729617431391</updated>
     </task>
-    <task id="LOCAL-00087" summary="о боже">
-      <created>1745526612845</created>
-      <option name="number" value="00087" />
-      <option name="presentableId" value="LOCAL-00087" />
-      <option name="project" value="LOCAL" />
-      <updated>1745526612859</updated>
-    </task>
     <task id="LOCAL-00088" summary="о боже">
       <created>1745527366516</created>
       <option name="number" value="00088" />
@@ -435,7 +428,14 @@
       <option name="project" value="LOCAL" />
       <updated>1745675308977</updated>
     </task>
-    <option name="localTasksCounter" value="136" />
+    <task id="LOCAL-00136" summary="график">
+      <created>1745675977281</created>
+      <option name="number" value="00136" />
+      <option name="presentableId" value="LOCAL-00136" />
+      <option name="project" value="LOCAL" />
+      <updated>1745675977295</updated>
+    </task>
+    <option name="localTasksCounter" value="137" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -462,7 +462,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="изменение отображение результатов" />
     <MESSAGE value="ну и ещё немного" />
     <MESSAGE value="БД" />
     <MESSAGE value="конвертор" />
@@ -487,7 +486,8 @@
     <MESSAGE value="к" />
     <MESSAGE value="похоже это победа" />
     <MESSAGE value="расчёт часовки" />
-    <option name="LAST_COMMIT_MESSAGE" value="расчёт часовки" />
+    <MESSAGE value="график" />
+    <option name="LAST_COMMIT_MESSAGE" value="график" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
 </project>
