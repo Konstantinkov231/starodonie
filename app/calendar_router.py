@@ -30,6 +30,8 @@ from app.database.sqlite_db import (
 )
 
 router = Router()
+
+calendar_router = router
 ADMIN_IDS = [2015462319, 1773695867]
 
 def is_admin(uid: int) -> bool: return uid in ADMIN_IDS
