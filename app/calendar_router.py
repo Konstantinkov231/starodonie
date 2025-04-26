@@ -167,7 +167,7 @@ async def save_name(msg: Message, state: FSMContext):
 #   Навигация календаря (доступна всем)
 # ───────────────────────────────────────────────
 
-@router.callback_query(F.data.startswith("CAL_PREV|"))
+@router.callback_query(StateFilter(None), F.data.startswith("CAL_PREV|"))
 async def prev_month(q: CallbackQuery):
     _, y, m = q.data.split("|")
     y, m = int(y), int(m) - 1
@@ -179,7 +179,7 @@ async def prev_month(q: CallbackQuery):
     await q.message.edit_text("Ваш календарь:", reply_markup=kb)
 
 
-@router.callback_query(F.data.startswith("CAL_NEXT|"))
+@router.callback_query(StateFilter(None), F.data.startswith("CAL_NEXT|"))
 async def next_month(q: CallbackQuery):
     _, y, m = q.data.split("|")
     y, m = int(y), int(m) + 1
@@ -191,12 +191,12 @@ async def next_month(q: CallbackQuery):
     await q.message.edit_text("Ваш календарь:", reply_markup=kb)
 
 
-@router.callback_query(F.data == "CAL_CANCEL")
+@router.callback_query(StateFilter(None), F.data == "CAL_CANCEL")
 async def cancel_cal(q: CallbackQuery):
     await q.message.delete()
 
 
-@router.callback_query(F.data.startswith("CAL_DAY|"))
+@router.callback_query(StateFilter(None), F.data.startswith("CAL_DAY|"))
 async def show_shift(q: CallbackQuery):
     _, ds = q.data.split("|", 1)
     info = get_shifts_for(get_waiter_id_by_tg(q.from_user.id)).get(ds)
@@ -275,9 +275,17 @@ async def forecast_send(q: CallbackQuery, state: FSMContext):
     ok = q.data == "FORECAST_YES"
 
     txt = (
-        "📣 <b>Прогноз выхода</b>"
-        f"Официант: {q.from_user.full_name} (@{q.from_user.username or 'N/A'})"
-        f"Дата: {ds}"
+        "📣 <b>Прогноз выхода</b>
+"\
+        f"Официант: {q.from_user.full_name} (@{q.from_user.username or 'N/A'})
+"\
+        f"Дата: {ds}
+"\
+        f"{'✅ Сможет выйти' if ok else '❌ Не сможет выйти'}"
+        f"Официант: {q.from_user.full_name} (@{q.from_user.username or 'N/A'})
+"
+        f"Дата: {ds}
+"
         f"{'✅ Сможет выйти' if ok else '❌ Не сможет выйти'}"
     )
 
