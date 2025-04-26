@@ -122,6 +122,10 @@ async def waiter_menu(msg: Message):
 async def waiter_menu_cb(q: CallbackQuery):
     await q.message.edit_text("Меню официанта:", reply_markup=WAITER_MENU)
 
+@router.callback_query(F.data == "W_MENU_DEL")
+async def waiter_menu_del(q: CallbackQuery):
+    await q.message.delete()
+    await q.message.answer("Меню официанта:", reply_markup=WAITER_MENU)
 
 async def _send_calendar(m: Message, uid: int, edit: bool = False):
     """Отправляет (или редактирует) календарь официанту."""
@@ -287,14 +291,17 @@ async def forecast_send(q: CallbackQuery, state: FSMContext):
         except Exception:
             continue
 
-    if delivered:
-        await q.answer("Прогноз отправлен администраторам ✅", show_alert=True)
-    else:
-        await q.answer("❗️ Не удалось уведомить администраторов", show_alert=True)
+    await q.answer(
+        "Прогноз отправлен администраторам ✅" if delivered
+        else "❗️ Не удалось уведомить администраторов",
+        show_alert=True
+    )
 
-    await q.message.edit_text("Спасибо! Ваш прогноз учтён.", reply_markup=WAITER_MENU)
+    kb = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton("⏪ В меню", callback_data="W_MENU_DEL")]]
+    )
+    await q.message.edit_text("Спасибо! Ваш прогноз учтён.", reply_markup=kb)
     await state.clear()
-
 # ───────────────────────────────────────────────
 #   TIPS block
 # ───────────────────────────────────────────────
