@@ -60,6 +60,12 @@ class ForecastStates(StatesGroup):
 class TipsState(StatesGroup):
     input = State()
 
+class Forecast(StatesGroup):
+    choose_date: State = State()
+    confirm:     State = State()
+
+def is_admin(uid: int) -> bool:  # noqa: D401
+    return uid in ADMIN_IDS
 # ────────────────────────────────────────────────────────────────
 # Helper UI builders
 # ────────────────────────────────────────────────────────────────
