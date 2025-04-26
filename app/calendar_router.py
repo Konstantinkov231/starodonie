@@ -5,7 +5,6 @@ Waiter‑side calendar, forecast & tips for «Стародонье».
 from __future__ import annotations
 
 import calendar
-import os
 from datetime import datetime
 from decimal import Decimal
 from typing import Set
@@ -36,15 +35,15 @@ from app.database.sqlite_db import (
 # Globals & constants
 # ────────────────────────────────────────────────────────────────
 router = Router()
-calendar_router = router  # alias used elsewhere
+calendar_router = router
 
 ADMIN_IDS = [2015462319, 1773695867]
-CHAT_ID = os.getenv("CHAT_ID")  # групповой чат админов
+# Чаты админов, куда уходит уведомление из прогноза
+# Можно задать прямо в коде или переменной окружения CHAT_IDS="123,456"
+ADMIN_CHAT_IDS  = [2015462319, 1773695867]
 
-
-def is_admin(uid: int) -> bool:
+def is_admin(uid: int) -> bool:  # noqa: D401
     return uid in ADMIN_IDS
-
 # ────────────────────────────────────────────────────────────────
 # FSM blocks
 # ────────────────────────────────────────────────────────────────
@@ -269,35 +268,40 @@ async def forecast_next_month(q: CallbackQuery):
     await q.message.edit_text("Выберите дату для прогноза:", reply_markup=kb)
 
 
+# --- Отправка прогноза админам ---
 @router.callback_query(
-    StateFilter(ForecastStates.confirm),
+    StateFilter(Forecast.confirm),
     F.data.in_({"FORECAST_YES", "FORECAST_NO"})
 )
 async def forecast_send(q: CallbackQuery, state: FSMContext):
-    data = await state.get_data()
-    ds = data["date"]
+    ds = (await state.get_data())["date"]
     ok = q.data == "FORECAST_YES"
 
-    if not CHAT_ID:
-        await q.answer("CHAT_ID не настроен", show_alert=True)
-        await waiter_menu_cb(q)
-        await state.clear()
-        return
-
+    # Текст для администраторов
     txt = (
-        "📣 Прогноз:\n"
-        f"Официант: {q.from_user.full_name} (@{q.from_user.username or 'нет'})\n"
+        "📣 <b>Прогноз выхода</b>\n"
+        f"Официант: {q.from_user.full_name} (@{q.from_user.username or 'N/A'})\n"
         f"Дата: {ds}\n"
-        f"{'✅ Смогу' if ok else '❌ Не смогу'}"
+        f"{'✅ Сможет выйти' if ok else '❌ Не сможет выйти'}"
     )
 
-    try:
-        await q.bot.send_message(CHAT_ID, txt)
-    except Exception:
-        pass
+    # Рассылка в указанные админ‑чаты
+    delivered = False
+    for chat_id in ADMIN_CHAT_IDS:
+        try:
+            await q.bot.send_message(chat_id, txt, parse_mode="HTML")
+            delivered = True
+        except Exception:
+            continue  # пропускаем, если бот не может писать в чат
 
-    await q.message.edit_text("Спасибо! Отправлено админу.", reply_markup=WAITER_MENU)
+    if not delivered:
+        await q.answer("Не удалось отправить уведомление администраторам!", show_alert=True)
+    else:
+        await q.answer("Прогноз отправлен администраторам ✅", show_alert=True)
+
+    await q.message.edit_text("Спасибо! Ваш прогноз учтён.", reply_markup=WAITER_MENU)
     await state.clear()
+
 
 # ────────────────────────────────────────────────────────────────
 # TIPS BLOCK
