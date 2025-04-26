@@ -66,6 +66,7 @@ class Forecast(StatesGroup):
 class TipsState(StatesGroup):
     input = State()
 
+
 # ───────────────────────────────────────────────
 #   UI‑строители
 # ───────────────────────────────────────────────
@@ -262,7 +263,11 @@ async def forecast_next_month(q: CallbackQuery):
     await q.message.edit_text("Выберите дату для прогноза:", reply_markup=kb)
 
 
-@router.callback_query(StateFilter(Forecast.confirm), F.data.in_({"FORECAST_YES", "FORECAST_NO"}))
+@router.callback_query(
+    StateFilter(Forecast.confirm),
+    F.data.in_(["FORECAST_YES", "FORECAST_NO"])
+)
+
 async def forecast_send(q: CallbackQuery, state: FSMContext):
     ds = (await state.get_data())["date"]
     ok = q.data == "FORECAST_YES"
