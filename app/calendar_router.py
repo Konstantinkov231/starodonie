@@ -1,5 +1,6 @@
 """
 Waiter‑side calendar, forecast & tips for «Стародонье».
+Все функции доступны любому пользователю (админ‑ограничения убраны).
 """
 
 from __future__ import annotations
@@ -39,16 +40,10 @@ from app.database.sqlite_db import (
 router = Router()
 calendar_router = router  # alias for main bot file
 
-ADMIN_IDS: list[int] = [2015462319, 1773695867]
-# Админ‑чаты для получения прогнозов
-ADMIN_CHAT_IDS: list[int] = (
-    [int(x) for x in os.getenv("CHAT_IDS", "").split(",") if x] or ADMIN_IDS
-)
-
-
-def is_admin(uid: int) -> bool:  # noqa: D401
-    """Проверка, является ли пользователь администратором."""
-    return uid in ADMIN_IDS
+# Админ‑чаты для получения прогнозов (можно не задавать)
+ADMIN_CHAT_IDS: list[int] = [
+    int(x) for x in os.getenv("CHAT_IDS", "2015462319,1773695867").split(",") if x
+]
 
 # ───────────────────────────────────────────────
 #   FSM‑состояния
@@ -65,7 +60,6 @@ class Forecast(StatesGroup):
 
 class TipsState(StatesGroup):
     input = State()
-
 
 # ───────────────────────────────────────────────
 #   UI‑строители
@@ -110,7 +104,7 @@ WAITER_MENU = InlineKeyboardMarkup(
 )
 
 # ───────────────────────────────────────────────
-#   Меню /calendar / просмотр календаря
+#   Меню и календарь
 # ───────────────────────────────────────────────
 
 @router.message(Command("menu"))
@@ -122,13 +116,15 @@ async def waiter_menu(msg: Message):
 async def waiter_menu_cb(q: CallbackQuery):
     await q.message.edit_text("Меню официанта:", reply_markup=WAITER_MENU)
 
+
 @router.callback_query(F.data == "W_MENU_DEL")
 async def waiter_menu_del(q: CallbackQuery):
     await q.message.delete()
     await q.message.answer("Меню официанта:", reply_markup=WAITER_MENU)
 
+
 async def _send_calendar(m: Message, uid: int, edit: bool = False):
-    """Отправляет (или редактирует) календарь официанту."""
+    """Отправляет (или редактирует) календарь."""
     wid = get_waiter_id_by_tg(uid)
     shifts = get_shifts_for(wid)
     kb = make_calendar(datetime.today().year, datetime.today().month, set(shifts.keys()))
@@ -168,10 +164,10 @@ async def save_name(msg: Message, state: FSMContext):
     await state.clear()
 
 # ───────────────────────────────────────────────
-#   Навигация календаря (официант)
+#   Навигация календаря (доступна всем)
 # ───────────────────────────────────────────────
 
-@router.callback_query(lambda q: not is_admin(q.from_user.id) and q.data.startswith("CAL_PREV|"))
+@router.callback_query(F.data.startswith("CAL_PREV|"))
 async def prev_month(q: CallbackQuery):
     _, y, m = q.data.split("|")
     y, m = int(y), int(m) - 1
@@ -183,7 +179,7 @@ async def prev_month(q: CallbackQuery):
     await q.message.edit_text("Ваш календарь:", reply_markup=kb)
 
 
-@router.callback_query(lambda q: not is_admin(q.from_user.id) and q.data.startswith("CAL_NEXT|"))
+@router.callback_query(F.data.startswith("CAL_NEXT|"))
 async def next_month(q: CallbackQuery):
     _, y, m = q.data.split("|")
     y, m = int(y), int(m) + 1
@@ -195,19 +191,21 @@ async def next_month(q: CallbackQuery):
     await q.message.edit_text("Ваш календарь:", reply_markup=kb)
 
 
-@router.callback_query(lambda q: not is_admin(q.from_user.id) and q.data == "CAL_CANCEL")
+@router.callback_query(F.data == "CAL_CANCEL")
 async def cancel_cal(q: CallbackQuery):
     await q.message.delete()
 
 
-@router.callback_query(lambda q: not is_admin(q.from_user.id) and q.data.startswith("CAL_DAY|"))
+@router.callback_query(F.data.startswith("CAL_DAY|"))
 async def show_shift(q: CallbackQuery):
     _, ds = q.data.split("|", 1)
     info = get_shifts_for(get_waiter_id_by_tg(q.from_user.id)).get(ds)
     text = (
         f"📅 {ds}\n⏱️ {info['hours']} ч\n📋 {info['tasks'] or '—'}" if info else "Нет смен."
     )
-    kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="⏪ В меню", callback_data="W_MENU")]])
+    kb = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="⏪ В меню", callback_data="W_MENU")]]
+    )
     await q.message.delete()
     await q.message.answer(text, reply_markup=kb)
 
@@ -257,7 +255,7 @@ async def forecast_prev_month(q: CallbackQuery):
 
 
 @router.callback_query(StateFilter(Forecast.choose_date), F.data.startswith("CAL_NEXT|"))
-async def forecast_next_month(q: CallbackQuery):
+async def forecast_next_month(q: CallbackQuery, state: FSMContext):
     _, y, m = q.data.split("|")
     y, m = int(y), int(m) + 1
     if m == 13:
@@ -271,15 +269,18 @@ async def forecast_next_month(q: CallbackQuery):
     StateFilter(Forecast.confirm),
     F.data.in_(["FORECAST_YES", "FORECAST_NO"])
 )
-
 async def forecast_send(q: CallbackQuery, state: FSMContext):
-    ds = (await state.get_data())["date"]
+    data = await state.get_data()
+    ds = data["date"]
     ok = q.data == "FORECAST_YES"
 
     txt = (
-        "📣 <b>Прогноз выхода</b>\n"
-        f"Официант: {q.from_user.full_name} (@{q.from_user.username or 'N/A'})\n"
-        f"Дата: {ds}\n"
+        "📣 <b>Прогноз выхода</b>
+"
+        f"Официант: {q.from_user.full_name} (@{q.from_user.username or 'N/A'})
+"
+        f"Дата: {ds}
+"
         f"{'✅ Сможет выйти' if ok else '❌ Не сможет выйти'}"
     )
 
@@ -292,16 +293,16 @@ async def forecast_send(q: CallbackQuery, state: FSMContext):
             continue
 
     await q.answer(
-        "Прогноз отправлен администраторам ✅" if delivered
-        else "❗️ Не удалось уведомить администраторов",
-        show_alert=True
+        "Прогноз отправлен администраторам ✅" if delivered else
+        "❗️ Не удалось уведомить администраторов", show_alert=True
     )
 
     kb = InlineKeyboardMarkup(
-        inline_keyboard=[[InlineKeyboardButton("⏪ В меню", callback_data="W_MENU_DEL")]]
+        inline_keyboard=[[InlineKeyboardButton(text="⏪ В меню", callback_data="W_MENU_DEL")]]
     )
     await q.message.edit_text("Спасибо! Ваш прогноз учтён.", reply_markup=kb)
     await state.clear()
+
 # ───────────────────────────────────────────────
 #   TIPS block
 # ───────────────────────────────────────────────
