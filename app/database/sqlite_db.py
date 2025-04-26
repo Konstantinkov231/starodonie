@@ -85,12 +85,10 @@ def sql_start():
     base.commit()
 
 # ================== users_start ==================
-def add_user_start(tg_id: int, username: str):
-    """Сохраняем запись о запуске бота пользователем"""
-    start_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+def add_user_start(tg_id: int, username: str | None):
     cur.execute(
-        'INSERT INTO users_start (tg_id, username, start_date) VALUES (?, ?, ?)',
-        (tg_id, username, start_date)
+        "INSERT INTO users_start (tg_id, username, start_date) VALUES (?,?,?)",
+        (tg_id, username, datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
     )
     base.commit()
 
@@ -220,3 +218,35 @@ def get_all_shifts():
         ' JOIN waiters w ON s.waiter_id = w.id'
     )
     return cur.fetchall()
+
+# ─────────────────────────────────────────────
+# TIPS  ← нужные функции!
+# ─────────────────────────────────────────────
+def add_tip(waiter_id: int, date: str, amount: float):
+    """Добавить или обновить сумму чаевых за дату."""
+    cur.execute(
+        """
+        INSERT INTO tips (waiter_id, date, amount)
+        VALUES (?,?,?)
+        ON CONFLICT(waiter_id, date)
+        DO UPDATE SET amount=excluded.amount
+        """,
+        (waiter_id, date, amount),
+    )
+    base.commit()
+
+def get_month_tips(waiter_id: int, ym: str) -> float:
+    """Вернуть сумму чаевых за месяц (ym = 'YYYY-MM')."""
+    cur.execute(
+        "SELECT COALESCE(SUM(amount),0) FROM tips WHERE waiter_id=? AND date LIKE ?",
+        (waiter_id, f"{ym}-%"),
+    )
+    return cur.fetchone()[0]
+
+def clear_month_tips(waiter_id: int, ym: str):
+    """Обнулить чаевые за указанный месяц."""
+    cur.execute(
+        "DELETE FROM tips WHERE waiter_id=? AND date LIKE ?",
+        (waiter_id, f"{ym}-%"),
+    )
+    base.commit()
