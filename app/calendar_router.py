@@ -275,12 +275,9 @@ async def forecast_send(q: CallbackQuery, state: FSMContext):
     ok = q.data == "FORECAST_YES"
 
     txt = (
-        "📣 <b>Прогноз выхода</b>
-"
-        f"Официант: {q.from_user.full_name} (@{q.from_user.username or 'N/A'})
-"
-        f"Дата: {ds}
-"
+        "📣 <b>Прогноз выхода</b>"
+        f"Официант: {q.from_user.full_name} (@{q.from_user.username or 'N/A'})"
+        f"Дата: {ds}"
         f"{'✅ Сможет выйти' if ok else '❌ Не сможет выйти'}"
     )
 
