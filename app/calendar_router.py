@@ -92,9 +92,9 @@ def make_calendar(year: int, month: int, marked: Set[str]) -> InlineKeyboardMark
 
 WAITER_MENU = InlineKeyboardMarkup(
     inline_keyboard=[
-        [InlineKeyboardButton("📆 Просмотреть график", callback_data="W_CALENDAR")],
-        [InlineKeyboardButton("📅 Прогнозировать график", callback_data="FORECAST_START")],
-        [InlineKeyboardButton("💵 Подсчёт чаевых", callback_data="TIPS_START")],
+        [InlineKeyboardButton(text="📆 Просмотреть график", callback_data="W_CALENDAR")],
+        [InlineKeyboardButton(text="📅 Прогнозировать график", callback_data="FORECAST_START")],
+        [InlineKeyboardButton(text="💵 Подсчёт чаевых", callback_data="TIPS_START")],
     ]
 )
 
