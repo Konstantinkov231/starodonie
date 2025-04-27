@@ -157,6 +157,12 @@ async def save_name(msg: Message, state: FSMContext):
 
 
 # ─────────── Calendar navigation ───────────
+@router.callback_query(F.data == "W_CALENDAR")
+async def waiter_calendar(q: CallbackQuery): await _send_calendar(q.message, q.from_user.id, True)
+
+@router.callback_query(F.data == "IGNORE")
+async def _ignore(q: CallbackQuery): await q.answer()
+
 @router.callback_query(StateFilter(None), F.data.startswith("CAL_PREV|"))
 async def prev_month(q: CallbackQuery):
     _, y, m = q.data.split("|")
