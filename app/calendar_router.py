@@ -65,36 +65,45 @@ class TipsState(StatesGroup):
 # ────────────────────────────────
 
 def make_calendar(year: int, month: int, marked: Set[str]) -> InlineKeyboardMarkup:
-    """Return an inline‑calendar with marked dates."""
+    """Return an inline‑calendar with marked dates (buttons use named args)."""
+
     kb: list[list[InlineKeyboardButton]] = []
+
+    # Header navigation
     kb.append([
-        InlineKeyboardButton("‹", callback_data=f"CAL_PREV|{year}|{month}"),
-        InlineKeyboardButton(f"{calendar.month_name[month]} {year}", callback_data="IGNORE"),
-        InlineKeyboardButton("›", callback_data=f"CAL_NEXT|{year}|{month}"),
+        InlineKeyboardButton(text="‹", callback_data=f"CAL_PREV|{year}|{month}"),
+        InlineKeyboardButton(text=f"{calendar.month_name[month]} {year}", callback_data="IGNORE"),
+        InlineKeyboardButton(text="›", callback_data=f"CAL_NEXT|{year}|{month}"),
     ])
+
+    # Weekdays row
     kb.append([
-        InlineKeyboardButton(txt, callback_data="IGNORE")
-        for txt in ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
+        InlineKeyboardButton(text=d, callback_data="IGNORE")
+        for d in ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
     ])
+
+    # Days grid
     for week in calendar.Calendar(firstweekday=0).monthdayscalendar(year, month):
         row: list[InlineKeyboardButton] = []
         for day in week:
             if day == 0:
-                row.append(InlineKeyboardButton(" ", callback_data="IGNORE"))
+                row.append(InlineKeyboardButton(text=" ", callback_data="IGNORE"))
             else:
                 ds = f"{year:04d}-{month:02d}-{day:02d}"
                 mark = "✓" if ds in marked else ""
-                row.append(InlineKeyboardButton(f"{day}{mark}", callback_data=f"CAL_DAY|{ds}"))
+                row.append(InlineKeyboardButton(text=f"{day}{mark}", callback_data=f"CAL_DAY|{ds}"))
         kb.append(row)
-    kb.append([InlineKeyboardButton("❌ Отмена", callback_data="CAL_CANCEL")])
+
+    # Footer
+    kb.append([InlineKeyboardButton(text="❌ Отмена", callback_data="CAL_CANCEL")])
     return InlineKeyboardMarkup(inline_keyboard=kb)
 
 
 WAITER_MENU = InlineKeyboardMarkup(
     inline_keyboard=[
-        [InlineKeyboardButton(text="📆 Просмотреть график", callback_data="W_CALENDAR")],
+        [InlineKeyboardButton(text="📆 Просмотреть график",   callback_data="W_CALENDAR")],
         [InlineKeyboardButton(text="📅 Прогнозировать график", callback_data="FORECAST_START")],
-        [InlineKeyboardButton(text="💵 Подсчёт чаевых", callback_data="TIPS_START")],
+        [InlineKeyboardButton(text="💵 Подсчёт чаевых",       callback_data="TIPS_START")],
     ]
 )
 
@@ -119,10 +128,12 @@ async def waiter_menu_del(q: CallbackQuery):
 
 
 async def _send_calendar(m: Message, uid: int, edit: bool = False):
+    """Send or edit waiter calendar."""
     wid = get_waiter_id_by_tg(uid)
     shifts = get_shifts_for(wid)
     kb = make_calendar(datetime.today().year, datetime.today().month, set(shifts.keys()))
-    kb.inline_keyboard.append([InlineKeyboardButton("⏪ В меню", callback_data="W_MENU")])
+    kb.inline_keyboard.append([InlineKeyboardButton(text="⏪ В меню", callback_data="W_MENU")])
+
     try:
         if edit:
             await m.edit_text("Ваш календарь:", reply_markup=kb)
@@ -132,7 +143,6 @@ async def _send_calendar(m: Message, uid: int, edit: bool = False):
         await m.answer("Ваш календарь:", reply_markup=kb)
 
 
-# /calendar команда
 @router.message(Command("calendar"))
 async def cmd_calendar(msg: Message, state: FSMContext):
     waiter = get_waiter_by_tg(msg.from_user.id)
@@ -156,12 +166,19 @@ async def save_name(msg: Message, state: FSMContext):
     await state.clear()
 
 
-# ─────────── Calendar navigation ───────────
+# ─────────── Quick calendar from menu button ───────────
 @router.callback_query(F.data == "W_CALENDAR")
-async def waiter_calendar(q: CallbackQuery): await _send_calendar(q.message, q.from_user.id, True)
+async def waiter_calendar_cb(q: CallbackQuery):
+    """Показывает календарь при нажатии кнопки в главном меню."""
+    await _send_calendar(q.message, q.from_user.id, True)
+
 
 @router.callback_query(F.data == "IGNORE")
-async def _ignore(q: CallbackQuery): await q.answer()
+async def _ignore_cb(q: CallbackQuery):
+    """Пустой клик — просто answer, чтобы убрать «часики»."""
+    await q.answer()
+
+# ─────────── Calendar navigation ───────────
 
 @router.callback_query(StateFilter(None), F.data.startswith("CAL_PREV|"))
 async def prev_month(q: CallbackQuery):
@@ -171,7 +188,7 @@ async def prev_month(q: CallbackQuery):
         y, m = y - 1, 12
     wid = get_waiter_id_by_tg(q.from_user.id)
     kb = make_calendar(y, m, set(get_shifts_for(wid).keys()))
-    kb.inline_keyboard.append([InlineKeyboardButton("⏪ В меню", callback_data="W_MENU")])
+    kb.inline_keyboard.append([InlineKeyboardButton(text="⏪ В меню", callback_data="W_MENU")])
     await q.message.edit_text("Ваш календарь:", reply_markup=kb)
 
 
@@ -183,7 +200,7 @@ async def next_month(q: CallbackQuery):
         y, m = y + 1, 1
     wid = get_waiter_id_by_tg(q.from_user.id)
     kb = make_calendar(y, m, set(get_shifts_for(wid).keys()))
-    kb.inline_keyboard.append([InlineKeyboardButton("⏪ В меню", callback_data="W_MENU")])
+    kb.inline_keyboard.append([InlineKeyboardButton(text="⏪ В меню", callback_data="W_MENU")])
     await q.message.edit_text("Ваш календарь:", reply_markup=kb)
 
 
@@ -196,19 +213,16 @@ async def cancel_cal(q: CallbackQuery):
 async def show_shift(q: CallbackQuery):
     _, ds = q.data.split("|", 1)
     info = get_shifts_for(get_waiter_id_by_tg(q.from_user.id)).get(ds)
-    text = (
-        f"📅 {ds}\n⏱️ {info['hours']} ч\n📋 {info['tasks'] or '—'}" if info else "Нет смен."
-    )
-    kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton("⏪ В меню", callback_data="W_MENU")]])
+    text = f"📅 {ds}\n⏱️ {info['hours']} ч\n📋 {info['tasks'] or '—'}" if info else "Нет смен."
+    kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="⏪ В меню", callback_data="W_MENU")]])
     await q.message.delete()
     await q.message.answer(text, reply_markup=kb)
-
 
 # ─────────── FORECAST ───────────
 @router.callback_query(F.data == "FORECAST_START")
 async def forecast_start(q: CallbackQuery, state: FSMContext):
     kb = make_calendar(datetime.today().year, datetime.today().month, set())
-    kb.inline_keyboard.append([InlineKeyboardButton("⏪ В меню", callback_data="W_MENU")])
+    kb.inline_keyboard.append([InlineKeyboardButton(text="⏪ В меню", callback_data="W_MENU")])
     await state.set_state(Forecast.choose_date)
     await q.message.edit_text("Выберите дату для прогноза:", reply_markup=kb)
 
@@ -218,8 +232,8 @@ async def forecast_choose(q: CallbackQuery, state: FSMContext):
     _, ds = q.data.split("|", 1)
     await state.update_data(date=ds)
     kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton("✅ Смогу", callback_data="FORECAST_YES")],
-        [InlineKeyboardButton("❌ Не смогу", callback_data="FORECAST_NO")],
+        [InlineKeyboardButton(text="✅ Смогу", callback_data="FORECAST_YES")],
+        [InlineKeyboardButton(text="❌ Не смогу", callback_data="FORECAST_NO")],
     ])
     await state.set_state(Forecast.confirm)
     await q.message.edit_text(f"Дата: {ds}\nСможете выйти?", reply_markup=kb)
@@ -231,24 +245,23 @@ async def forecast_cancel(q: CallbackQuery, state: FSMContext):
     await waiter_menu_cb(q)
 
 
-for _dir in ("CAL_PREV|", "CAL_NEXT|"):
-    @router.callback_query(StateFilter(Forecast.choose_date), F.data.startswith(_dir))
-    async def _forecast_nav(q: CallbackQuery, state: FSMContext, _dir=_dir):  # noqa: B023
+for _t in ("CAL_PREV|", "CAL_NEXT|"):
+    @router.callback_query(StateFilter(Forecast.choose_date), F.data.startswith(_t))
+    async def _forecast_nav(q: CallbackQuery, state: FSMContext, _t=_t):  # noqa: B023
         _, y, m = q.data.split("|")
-        y, m = int(y), int(m) + (-1 if _dir == "CAL_PREV|" else 1)
+        y, m = int(y), int(m) + (-1 if _t == "CAL_PREV|" else 1)
         if m == 0:
             y, m = y - 1, 12
         if m == 13:
             y, m = y + 1, 1
         kb = make_calendar(y, m, set())
-        kb.inline_keyboard.append([InlineKeyboardButton("⏪ В меню", callback_data="W_MENU")])
+        kb.inline_keyboard.append([InlineKeyboardButton(text="⏪ В меню", callback_data="W_MENU")])
         await q.message.edit_text("Выберите дату для прогноза:", reply_markup=kb)
 
 
 @router.callback_query(StateFilter(Forecast.confirm), F.data.in_(["FORECAST_YES", "FORECAST_NO"]))
 async def forecast_send(q: CallbackQuery, state: FSMContext):
-    data = await state.get_data()
-    ds = data["date"]
+    ds = (await state.get_data())["date"]
     ok = q.data == "FORECAST_YES"
 
     txt = (
@@ -265,14 +278,15 @@ async def forecast_send(q: CallbackQuery, state: FSMContext):
             delivered = True
         except Exception:
             continue
+
     await q.answer(
         "Прогноз отправлен администраторам ✅" if delivered else "❗️ Не удалось уведомить администраторов",
         show_alert=True,
     )
-    kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton("⏪ В меню", callback_data="W_MENU_DEL")]])
+
+    kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="⏪ В меню", callback_data="W_MENU_DEL")]])
     await q.message.edit_text("Спасибо! Ваш прогноз учтён.", reply_markup=kb)
     await state.clear()
-
 
 # ─────────── TIPS ───────────
 @router.callback_query(F.data == "TIPS_START")
@@ -293,12 +307,14 @@ async def tips_save(msg: Message, state: FSMContext):
     except Exception:
         await msg.reply("Введите корректное число, например 1234.50")
         return
+
     add_tip(data["wid"], data["date"], float(amount))
     ym = data["date"][:7]
     total = get_month_tips(data["wid"], ym) or 0.0
+
     kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton("🧹 Обнулить чаевые за месяц", callback_data=f"TIPS_CLEAR|{ym}")],
-        [InlineKeyboardButton("⏪ В меню", callback_data="W_MENU")],
+        [InlineKeyboardButton(text="🧹 Обнулить чаевые за месяц", callback_data=f"TIPS_CLEAR|{ym}")],
+        [InlineKeyboardButton(text="⏪ В меню", callback_data="W_MENU")],
     ])
     await msg.answer(f"Записано {amount:.2f} ₽. Всего за {ym}: {total:.2f} ₽", reply_markup=kb)
     await state.clear()
