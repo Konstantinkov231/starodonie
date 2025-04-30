@@ -72,6 +72,28 @@ def sql_start():
         )
     ''')
 
+    # Таблица сотрудников (для часовки)
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS employees (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            last_name TEXT NOT NULL,
+            first_name TEXT NOT NULL,
+            role TEXT NOT NULL
+        )
+    ''')
+
+    # Таблица учёта отработанных часов
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS work_hours (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            employee_id INTEGER NOT NULL,
+            date TEXT NOT NULL,
+            hours REAL NOT NULL,
+            UNIQUE(employee_id, date),
+            FOREIGN KEY(employee_id) REFERENCES employees(id)
+        )
+    ''')
+
     # tips
     cur.execute("""
             CREATE TABLE IF NOT EXISTS tips (
@@ -250,3 +272,41 @@ def clear_month_tips(waiter_id: int, ym: str):
         (waiter_id, f"{ym}-%"),
     )
     base.commit()
+
+
+# ================== employees ==================
+def add_employee(last_name: str, first_name: str, role: str):
+    cur.execute(
+        'INSERT INTO employees (last_name, first_name, role) VALUES (?,?,?)',
+        (last_name, first_name, role)
+    )
+    base.commit()
+
+def get_all_employees() -> list[tuple[int,str,str,str]]:
+    """Возвращает список (id, last_name, first_name, role)."""
+    cur.execute('SELECT id, last_name, first_name, role FROM employees')
+    return cur.fetchall()
+
+# ================== work_hours ==================
+def set_work_hours(employee_id: int, date: str, hours: float):
+    """Записать или обновить часы для сотрудника на дату."""
+    cur.execute(
+        'INSERT INTO work_hours (employee_id, date, hours) VALUES (?,?,?) '
+        'ON CONFLICT(employee_id, date) DO UPDATE SET hours=excluded.hours',
+        (employee_id, date, hours)
+    )
+    base.commit()
+
+def get_work_hours(employee_id: int, date: str) -> float:
+    """Вернуть часы (0.0, если нет записи)."""
+    cur.execute(
+        'SELECT hours FROM work_hours WHERE employee_id=? AND date=?',
+        (employee_id, date)
+    )
+    row = cur.fetchone()
+    return row[0] if row else 0.0
+
+def get_all_work_hours_dates() -> list[str]:
+    """Список всех дат, где есть часы (для отметок в календаре)."""
+    cur.execute('SELECT DISTINCT date FROM work_hours')
+    return [r[0] for r in cur.fetchall()]
