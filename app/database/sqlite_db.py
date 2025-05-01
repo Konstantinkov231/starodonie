@@ -15,7 +15,7 @@ def sql_start():
     Инициализируем базу и создаём необходимые таблицы.
     """
     global base, cur
-    base = sqlite3.connect('user.db')
+    base = sqlite3.connect('starodonie.db')
     cur = base.cursor()
     if base:
         print("Database connected OK!")
@@ -48,17 +48,27 @@ def sql_start():
         CREATE TABLE IF NOT EXISTS waiters (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             tg_id INTEGER UNIQUE,
-            name TEXT DEFAULT ""
+            name TEXT DEFAULT "",
+            employee_id INTEGER,
+            FOREIGN KEY (employee_id) REFERENCES employees(id)
         )
     ''')
 
-    # Add name column to waiters if it doesn't exist (for existing databases)
+    # Migration: Add employee_id column if it doesn't exist
     try:
-        cur.execute("ALTER TABLE waiters ADD COLUMN name TEXT")
+        cur.execute("ALTER TABLE waiters ADD COLUMN employee_id INTEGER")
         base.commit()
     except sqlite3.OperationalError:
         # Column already exists, ignore the error
         pass
+
+    # Migration: Add foreign key constraint if not present
+    try:
+        cur.execute("PRAGMA foreign_keys=ON")
+        cur.execute("PRAGMA foreign_key_check")
+        base.commit()
+    except sqlite3.OperationalError:
+        pass  # Foreign key already set or not supported in older SQLite
 
     # Таблица результатов тестов (test_results)
     cur.execute('''
@@ -118,8 +128,10 @@ def sql_start():
     cur.execute("""
             CREATE TABLE IF NOT EXISTS tips (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                waiter_id INTEGER, date TEXT, amount REAL,
-                UNIQUE(waiter_id,date),
+                waiter_id INTEGER,
+                date TEXT,
+                amount REAL,
+                UNIQUE(waiter_id, date),
                 FOREIGN KEY(waiter_id) REFERENCES waiters(id)
             )
         """)
@@ -295,7 +307,6 @@ def clear_month_tips(waiter_id: int, ym: str):
     )
     base.commit()
 
-
 # ================== employees ==================
 def add_employee(last_name: str, first_name: str, role: str, rate: float = None):
     cur = base.cursor()
@@ -304,7 +315,8 @@ def add_employee(last_name: str, first_name: str, role: str, rate: float = None)
         (last_name, first_name, role, rate)
     )
     base.commit()
-def get_all_employees() -> list[tuple[int,str,str,str]]:
+
+def get_all_employees() -> list[tuple[int, str, str, str]]:
     """Возвращает список (id, last_name, first_name, role)."""
     cur.execute('SELECT id, last_name, first_name, role FROM employees')
     return cur.fetchall()
@@ -342,7 +354,6 @@ def set_waiter_name(tg_id: int, name: str):
     cur = base.cursor()
     cur.execute("UPDATE waiters SET name = ? WHERE tg_id = ?", (name, tg_id))
     base.commit()
-
 
 def get_employees_with_shifts():
     cur = base.cursor()
