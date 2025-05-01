@@ -79,6 +79,7 @@ def sql_start():
             last_name TEXT NOT NULL,
             first_name TEXT NOT NULL,
             role TEXT NOT NULL
+            rate FLOAT
         )
     ''')
 
@@ -234,11 +235,13 @@ def get_shifts_for(waiter_id: int) -> dict:
     return {row[0]: {'hours': row[1], 'tasks': row[2]} for row in cur.fetchall()}
 
 def get_all_shifts():
-    """Возвращает список [(name, date, hours, tasks), ...] для отчётов"""
-    cur.execute(
-        'SELECT w.name, s.date, s.hours, s.tasks FROM shifts s'
-        ' JOIN waiters w ON s.waiter_id = w.id'
-    )
+    cur = base.cursor()
+    cur.execute("""
+            SELECT e.id, e.first_name || ' ' || e.last_name AS name, s.date, s.hours, s.tasks
+            FROM shifts s
+            JOIN employees e ON s.waiter_id = e.id
+            ORDER BY s.date
+        """)
     return cur.fetchall()
 
 # ─────────────────────────────────────────────
@@ -275,14 +278,13 @@ def clear_month_tips(waiter_id: int, ym: str):
 
 
 # ================== employees ==================
-def add_employee(last_name: str, first_name: str, role: str):
+def add_employee(last_name: str, first_name: str, role: str, rate: float = None):
     cur = base.cursor()
     cur.execute(
         "INSERT INTO employees (last_name, first_name, role, rate) VALUES (?, ?, ?, ?)",
         (last_name, first_name, role, rate)
     )
     base.commit()
-
 def get_all_employees() -> list[tuple[int,str,str,str]]:
     """Возвращает список (id, last_name, first_name, role)."""
     cur.execute('SELECT id, last_name, first_name, role FROM employees')
@@ -311,3 +313,8 @@ def get_all_work_hours_dates() -> list[str]:
     """Список всех дат, где есть часы (для отметок в календаре)."""
     cur.execute('SELECT DISTINCT date FROM work_hours')
     return [r[0] for r in cur.fetchall()]
+
+def get_employee_by_id(emp_id: int):
+    cur = base.cursor()
+    cur.execute("SELECT id, last_name, first_name, role, rate FROM employees WHERE id = ?", (emp_id,))
+    return cur.fetchone()
