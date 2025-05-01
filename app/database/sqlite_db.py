@@ -366,16 +366,12 @@ def set_waiter_name(tg_id: int, name: str):
 
 def get_employees_with_shifts():
     cur = base.cursor()
+    # Simplified query to focus on waiters
     cur.execute("""
         SELECT w.id AS waiter_id, 
-               COALESCE(e.first_name || ' ' || e.last_name, w.name) AS name, 
-               s.date, 
-               s.hours, 
-               s.tasks
+               COALESCE(e.first_name || ' ' || e.last_name, w.name) AS name
         FROM waiters w
         LEFT JOIN employees e ON w.employee_id = e.id
-        LEFT JOIN shifts s ON s.waiter_id = w.id
-        ORDER BY name, s.date
     """)
     result = cur.fetchall()
     logger.debug("get_employees_with_shifts result: %s", result)
