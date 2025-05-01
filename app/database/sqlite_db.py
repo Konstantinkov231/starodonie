@@ -276,9 +276,10 @@ def clear_month_tips(waiter_id: int, ym: str):
 
 # ================== employees ==================
 def add_employee(last_name: str, first_name: str, role: str):
+    cur = base.cursor()
     cur.execute(
-        'INSERT INTO employees (last_name, first_name, role) VALUES (?,?,?)',
-        (last_name, first_name, role)
+        "INSERT INTO employees (last_name, first_name, role, rate) VALUES (?, ?, ?, ?)",
+        (last_name, first_name, role, rate)
     )
     base.commit()
 
