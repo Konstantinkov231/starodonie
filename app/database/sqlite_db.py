@@ -366,13 +366,25 @@ def set_waiter_name(tg_id: int, name: str):
 
 def get_employees_with_shifts():
     cur = base.cursor()
-    # Simplified query to focus on waiters
+    # Combine employees and waiters, prioritizing employee names where linked
     cur.execute("""
-        SELECT w.id AS waiter_id, 
-               COALESCE(e.first_name || ' ' || e.last_name, w.name) AS name
+        SELECT 
+            COALESCE(w.id, e.id) AS waiter_id,
+            COALESCE(
+                CASE 
+                    WHEN w.employee_id IS NOT NULL THEN e.first_name || ' ' || e.last_name
+                    ELSE w.name
+                END,
+                e.first_name || ' ' || e.last_name,
+                w.name,
+                'Без имени'
+            ) AS name
         FROM waiters w
-        LEFT JOIN employees e ON w.employee_id = e.id
+        FULL OUTER JOIN employees e ON w.employee_id = e.id
+        LEFT JOIN shifts s ON COALESCE(w.id, e.id) = s.waiter_id
+        GROUP BY COALESCE(w.id, e.id), name
+        ORDER BY name
     """)
-    result = cur.fetchall()
+    result = [(row['waiter_id'], row['name']) for row in cur.fetchall()]
     logger.debug("get_employees_with_shifts result: %s", result)
     return result
