@@ -268,11 +268,16 @@ def get_shifts_for(waiter_id: int) -> dict:
 def get_all_shifts():
     cur = base.cursor()
     cur.execute("""
-            SELECT e.id, e.first_name || ' ' || e.last_name AS name, s.date, s.hours, s.tasks
-            FROM shifts s
-            JOIN employees e ON s.waiter_id = e.id
-            ORDER BY s.date
-        """)
+        SELECT w.id AS waiter_id, 
+               COALESCE(e.first_name || ' ' || e.last_name, w.name) AS name, 
+               s.date, 
+               s.hours, 
+               s.tasks
+        FROM shifts s
+        JOIN waiters w ON s.waiter_id = w.id
+        LEFT JOIN employees e ON w.employee_id = e.id
+        ORDER BY s.date
+    """)
     return cur.fetchall()
 
 # ─────────────────────────────────────────────
@@ -358,11 +363,14 @@ def set_waiter_name(tg_id: int, name: str):
 def get_employees_with_shifts():
     cur = base.cursor()
     cur.execute("""
-        SELECT e.id, e.first_name || ' ' || e.last_name AS name, s.date, s.hours, s.tasks
-        FROM employees e
-        LEFT JOIN waiters w ON w.employee_id = e.id
-        LEFT JOIN shifts s ON s.waiter_id = e.id
-        WHERE w.employee_id IS NOT NULL
-        ORDER BY e.first_name, e.last_name, s.date
+        SELECT w.id AS waiter_id, 
+               COALESCE(e.first_name || ' ' || e.last_name, w.name) AS name, 
+               s.date, 
+               s.hours, 
+               s.tasks
+        FROM waiters w
+        LEFT JOIN employees e ON w.employee_id = e.id
+        LEFT JOIN shifts s ON s.waiter_id = w.id
+        ORDER BY name, s.date
     """)
     return cur.fetchall()
