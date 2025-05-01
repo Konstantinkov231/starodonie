@@ -318,3 +318,8 @@ def get_employee_by_id(emp_id: int):
     cur = base.cursor()
     cur.execute("SELECT id, last_name, first_name, role, rate FROM employees WHERE id = ?", (emp_id,))
     return cur.fetchone()
+
+def set_waiter_name(tg_id: int, name: str):
+    cur = base.cursor()
+    cur.execute("UPDATE waiters SET name = ? WHERE tg_id = ?", (name, tg_id))
+    base.commit()
