@@ -1,8 +1,12 @@
+import logging
 import sqlite3
 from datetime import datetime
 
 from aiogram import Router
 
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 # Router для отладочных SQL-команд
 SQL = Router()
 
@@ -374,5 +378,5 @@ def get_employees_with_shifts():
         ORDER BY name, s.date
     """)
     result = cur.fetchall()
-    print("get_employees_with_shifts result:", result)  # Debug print
+    logger.debug("get_employees_with_shifts result: %s", result)
     return result
