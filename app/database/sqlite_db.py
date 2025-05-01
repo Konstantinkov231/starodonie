@@ -373,4 +373,6 @@ def get_employees_with_shifts():
         LEFT JOIN shifts s ON s.waiter_id = w.id
         ORDER BY name, s.date
     """)
-    return cur.fetchall()
+    result = cur.fetchall()
+    print("get_employees_with_shifts result:", result)  # Debug print
+    return result
