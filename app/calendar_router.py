@@ -31,6 +31,7 @@ from app.database.sqlite_db import (
     add_tip,
     get_month_tips,
     clear_month_tips,
+    set_waiter_name,
 )
 
 # ────────────────────────────────
@@ -130,7 +131,7 @@ async def waiter_menu_del(q: CallbackQuery):
 async def _send_calendar(m: Message, uid: int, edit: bool = False):
     """Send or edit waiter calendar."""
     wid = get_waiter_id_by_tg(uid)
-    shifts = get_shifts_for(wid)
+    shifts = get_shifts_for(wid) if wid else {}
     kb = make_calendar(datetime.today().year, datetime.today().month, set(shifts.keys()))
     kb.inline_keyboard.append([InlineKeyboardButton(text="⏪ В меню", callback_data="W_MENU")])
 
@@ -145,10 +146,15 @@ async def _send_calendar(m: Message, uid: int, edit: bool = False):
 
 @router.message(Command("calendar"))
 async def cmd_calendar(msg: Message, state: FSMContext):
+    # Check if the user exists in the waiters table
     waiter = get_waiter_by_tg(msg.from_user.id)
-    if not waiter or not waiter[1]:
-        if not waiter:
-            add_waiter(msg.from_user.id)
+    if not waiter:
+        # User doesn't exist, add them to the waiters table with name as NULL
+        add_waiter(msg.from_user.id)
+        await msg.answer("Введите своё имя для календаря:")
+        await state.set_state(FillName.waiting)
+        return
+    if not waiter[1]:  # waiter[1] is the name; prompt if it's NULL
         await msg.answer("Введите своё имя для календаря:")
         await state.set_state(FillName.waiting)
         return
@@ -158,9 +164,7 @@ async def cmd_calendar(msg: Message, state: FSMContext):
 @router.message(StateFilter(FillName.waiting))
 async def save_name(msg: Message, state: FSMContext):
     name = msg.text.strip()
-    from app.database.sqlite_db import cur, base
-    cur.execute("UPDATE waiters SET name=? WHERE tg_id=?", (name, msg.from_user.id))
-    base.commit()
+    set_waiter_name(msg.from_user.id, name)
     await msg.answer(f"Спасибо, {name}!")
     await _send_calendar(msg, msg.from_user.id)
     await state.clear()
@@ -168,8 +172,20 @@ async def save_name(msg: Message, state: FSMContext):
 
 # ─────────── Quick calendar from menu button ───────────
 @router.callback_query(F.data == "W_CALENDAR")
-async def waiter_calendar_cb(q: CallbackQuery):
+async def waiter_calendar_cb(q: CallbackQuery, state: FSMContext):
     """Показывает календарь при нажатии кнопки в главном меню."""
+    # Check if the user exists in the waiters table
+    waiter = get_waiter_by_tg(q.from_user.id)
+    if not waiter:
+        # User doesn't exist, add them to the waiters table with name as NULL
+        add_waiter(q.from_user.id)
+        await q.message.edit_text("Введите своё имя для календаря:")
+        await state.set_state(FillName.waiting)
+        return
+    if not waiter[1]:  # waiter[1] is the name; prompt if it's NULL
+        await q.message.edit_text("Введите своё имя для календаря:")
+        await state.set_state(FillName.waiting)
+        return
     await _send_calendar(q.message, q.from_user.id, True)
 
 
