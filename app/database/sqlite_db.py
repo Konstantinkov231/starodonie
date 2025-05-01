@@ -80,8 +80,7 @@ def sql_start():
             first_name TEXT NOT NULL,
             role TEXT NOT NULL
             rate FLOAT
-        )
-    ''')
+        )''')
 
     # Таблица учёта отработанных часов
     cur.execute('''
