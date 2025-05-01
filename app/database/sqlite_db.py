@@ -349,8 +349,9 @@ def get_employees_with_shifts():
     cur.execute("""
         SELECT e.id, e.first_name || ' ' || e.last_name AS name, s.date, s.hours, s.tasks
         FROM employees e
-        JOIN waiters w ON w.employee_id = e.id
+        LEFT JOIN waiters w ON w.employee_id = e.id
         LEFT JOIN shifts s ON s.waiter_id = e.id
+        WHERE w.employee_id IS NOT NULL
         ORDER BY e.first_name, e.last_name, s.date
     """)
     return cur.fetchall()
