@@ -17,6 +17,8 @@ def sql_start():
     global base, cur
     base = sqlite3.connect('user.db')
     cur = base.cursor()
+    if base:
+        print("Database connected OK!")
 
     # Таблица пользователей (users_start)
     cur.execute('''
@@ -50,6 +52,14 @@ def sql_start():
         )
     ''')
 
+    # Add name column to waiters if it doesn't exist (for existing databases)
+    try:
+        cur.execute("ALTER TABLE waiters ADD COLUMN name TEXT")
+        base.commit()
+    except sqlite3.OperationalError:
+        # Column already exists, ignore the error
+        pass
+
     # Таблица результатов тестов (test_results)
     cur.execute('''
         CREATE TABLE IF NOT EXISTS test_results (
@@ -82,6 +92,15 @@ def sql_start():
             rate FLOAT
         )
     ''')
+
+    # Migration: Add rate column if it doesn't exist
+    try:
+        cur.execute("ALTER TABLE employees ADD COLUMN rate FLOAT")
+        base.commit()
+    except sqlite3.OperationalError as e:
+        # If the column already exists, this will raise an error like "duplicate column name"; we can safely ignore it
+        if "duplicate column name" not in str(e):
+            raise  # Re-raise if it's a different error
 
     # Таблица учёта отработанных часов
     cur.execute('''

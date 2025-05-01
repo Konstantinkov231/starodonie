@@ -6,7 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="47f13457-59eb-446c-a9ff-cc9e2b0e2e38" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/calendar_router.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/calendar_router.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/database/sqlite_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/database/sqlite_db.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -92,20 +92,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1729617431391</updated>
-    </task>
-    <task id="LOCAL-00115" summary="похоже это победа">
-      <created>1745537783468</created>
-      <option name="number" value="00115" />
-      <option name="presentableId" value="LOCAL-00115" />
-      <option name="project" value="LOCAL" />
-      <updated>1745537783481</updated>
-    </task>
-    <task id="LOCAL-00116" summary="похоже это победа">
-      <created>1745538251189</created>
-      <option name="number" value="00116" />
-      <option name="presentableId" value="LOCAL-00116" />
-      <option name="project" value="LOCAL" />
-      <updated>1745538251205</updated>
     </task>
     <task id="LOCAL-00117" summary="похоже это победа">
       <created>1745538635745</created>
@@ -436,7 +422,21 @@
       <option name="project" value="LOCAL" />
       <updated>1746126977904</updated>
     </task>
-    <option name="localTasksCounter" value="164" />
+    <task id="LOCAL-00164" summary="офики">
+      <created>1746127973465</created>
+      <option name="number" value="00164" />
+      <option name="presentableId" value="LOCAL-00164" />
+      <option name="project" value="LOCAL" />
+      <updated>1746127973467</updated>
+    </task>
+    <task id="LOCAL-00165" summary="офики">
+      <created>1746128030354</created>
+      <option name="number" value="00165" />
+      <option name="presentableId" value="LOCAL-00165" />
+      <option name="project" value="LOCAL" />
+      <updated>1746128030355</updated>
+    </task>
+    <option name="localTasksCounter" value="166" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
