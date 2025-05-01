@@ -78,9 +78,10 @@ def sql_start():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             last_name TEXT NOT NULL,
             first_name TEXT NOT NULL,
-            role TEXT NOT NULL
+            role TEXT NOT NULL,
             rate FLOAT
-        )''')
+        )
+    ''')
 
     # Таблица учёта отработанных часов
     cur.execute('''
