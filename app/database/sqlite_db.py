@@ -366,25 +366,34 @@ def set_waiter_name(tg_id: int, name: str):
 
 def get_employees_with_shifts():
     cur = base.cursor()
-    # Combine employees and waiters, prioritizing employee names where linked
+    # Query 1: Get waiters with their employee details (if linked)
     cur.execute("""
         SELECT 
-            COALESCE(w.id, e.id) AS waiter_id,
-            COALESCE(
-                CASE 
-                    WHEN w.employee_id IS NOT NULL THEN e.first_name || ' ' || e.last_name
-                    ELSE w.name
-                END,
-                e.first_name || ' ' || e.last_name,
-                w.name,
-                'Без имени'
-            ) AS name
+            w.id AS waiter_id,
+            COALESCE(e.first_name || ' ' || e.last_name, w.name, 'Без имени') AS name
         FROM waiters w
-        FULL OUTER JOIN employees e ON w.employee_id = e.id
-        LEFT JOIN shifts s ON COALESCE(w.id, e.id) = s.waiter_id
-        GROUP BY COALESCE(w.id, e.id), name
-        ORDER BY name
+        LEFT JOIN employees e ON w.employee_id = e.id
+        LEFT JOIN shifts s ON w.id = s.waiter_id
+        GROUP BY w.id, name
     """)
-    result = [(row['waiter_id'], row['name']) for row in cur.fetchall()]
-    logger.debug("get_employees_with_shifts result: %s", result)
-    return result
+    waiters_result = [(row['waiter_id'], row['name']) for row in cur.fetchall()]
+
+    # Query 2: Get employees not linked to waiters
+    cur.execute("""
+        SELECT 
+            e.id AS waiter_id,
+            COALESCE(e.first_name || ' ' || e.last_name, 'Без имени') AS name
+        FROM employees e
+        LEFT JOIN waiters w ON e.id = w.employee_id
+        LEFT JOIN shifts s ON e.id = s.waiter_id
+        WHERE w.employee_id IS NULL
+        GROUP BY e.id, name
+    """)
+    employees_result = [(row['waiter_id'], row['name']) for row in cur.fetchall()]
+
+    # Combine results and remove duplicates
+    combined_result = waiters_result + employees_result
+    unique_result = list(dict.fromkeys(combined_result))  # Remove duplicates based on (waiter_id, name)
+
+    logger.debug("get_employees_with_shifts result: %s", unique_result)
+    return unique_result
