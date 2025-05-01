@@ -364,7 +364,12 @@ def set_waiter_name(tg_id: int, name: str):
     cur.execute("UPDATE waiters SET name = ? WHERE tg_id = ?", (name, tg_id))
     base.commit()
 
+
 def get_employees_with_shifts():
+    global base
+    if not base:
+        sql_start()  # Initialize connection if not already done
+
     cur = base.cursor()
     # Query 1: Get waiters with their employee details (if linked)
     cur.execute("""
@@ -376,7 +381,12 @@ def get_employees_with_shifts():
         LEFT JOIN shifts s ON w.id = s.waiter_id
         GROUP BY w.id, name
     """)
-    waiters_result = [(row['waiter_id'], row['name']) for row in cur.fetchall()]
+    waiters_result = []
+    for row in cur.fetchall():
+        try:
+            waiters_result.append((row['waiter_id'], row['name']))
+        except TypeError:
+            waiters_result.append((row[0], row[1]))  # Fallback to tuple indices (0 for waiter_id, 1 for name)
 
     # Query 2: Get employees not linked to waiters
     cur.execute("""
@@ -389,7 +399,12 @@ def get_employees_with_shifts():
         WHERE w.employee_id IS NULL
         GROUP BY e.id, name
     """)
-    employees_result = [(row['waiter_id'], row['name']) for row in cur.fetchall()]
+    employees_result = []
+    for row in cur.fetchall():
+        try:
+            employees_result.append((row['waiter_id'], row['name']))
+        except TypeError:
+            employees_result.append((row[0], row[1]))  # Fallback to tuple indices
 
     # Combine results and remove duplicates
     combined_result = waiters_result + employees_result
