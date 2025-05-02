@@ -19,10 +19,14 @@ def sql_start():
     Инициализируем базу и создаём необходимые таблицы.
     """
     global base, cur
-    base = sqlite3.connect('starodonie.db')
-    cur = base.cursor()
-    if base:
+    try:
+        base = sqlite3.connect('starodonie.db')
+        base.row_factory = sqlite3.Row  # Ensure rows are returned as dictionaries
+        cur = base.cursor()
         print("Database connected OK!")
+    except sqlite3.DatabaseError as e:
+        print(f"Failed to connect to database: {e}")
+        raise
 
     # Таблица пользователей (users_start)
     cur.execute('''
@@ -47,6 +51,25 @@ def sql_start():
         )
     ''')
 
+    # Таблица сотрудников (для часовки) - создаём раньше, чтобы FOREIGN KEY в waiters работал
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS employees (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            last_name TEXT NOT NULL,
+            first_name TEXT NOT NULL,
+            role TEXT NOT NULL,
+            rate FLOAT
+        )
+    ''')
+
+    # Migration: Add rate column if it doesn't exist
+    try:
+        cur.execute("ALTER TABLE employees ADD COLUMN rate FLOAT")
+        base.commit()
+    except sqlite3.OperationalError as e:
+        if "duplicate column name" not in str(e):
+            raise
+
     # Таблица официантов (waiters)
     cur.execute('''
         CREATE TABLE IF NOT EXISTS waiters (
@@ -63,7 +86,6 @@ def sql_start():
         cur.execute("ALTER TABLE waiters ADD COLUMN employee_id INTEGER")
         base.commit()
     except sqlite3.OperationalError:
-        # Column already exists, ignore the error
         pass
 
     # Migration: Add foreign key constraint if not present
@@ -72,7 +94,7 @@ def sql_start():
         cur.execute("PRAGMA foreign_key_check")
         base.commit()
     except sqlite3.OperationalError:
-        pass  # Foreign key already set or not supported in older SQLite
+        pass
 
     # Таблица результатов тестов (test_results)
     cur.execute('''
@@ -96,26 +118,6 @@ def sql_start():
         )
     ''')
 
-    # Таблица сотрудников (для часовки)
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS employees (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            last_name TEXT NOT NULL,
-            first_name TEXT NOT NULL,
-            role TEXT NOT NULL,
-            rate FLOAT
-        )
-    ''')
-
-    # Migration: Add rate column if it doesn't exist
-    try:
-        cur.execute("ALTER TABLE employees ADD COLUMN rate FLOAT")
-        base.commit()
-    except sqlite3.OperationalError as e:
-        # If the column already exists, this will raise an error like "duplicate column name"; we can safely ignore it
-        if "duplicate column name" not in str(e):
-            raise  # Re-raise if it's a different error
-
     # Таблица учёта отработанных часов
     cur.execute('''
         CREATE TABLE IF NOT EXISTS work_hours (
@@ -130,15 +132,15 @@ def sql_start():
 
     # tips
     cur.execute("""
-            CREATE TABLE IF NOT EXISTS tips (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                waiter_id INTEGER,
-                date TEXT,
-                amount REAL,
-                UNIQUE(waiter_id, date),
-                FOREIGN KEY(waiter_id) REFERENCES waiters(id)
-            )
-        """)
+        CREATE TABLE IF NOT EXISTS tips (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            waiter_id INTEGER,
+            date TEXT,
+            amount REAL,
+            UNIQUE(waiter_id, date),
+            FOREIGN KEY(waiter_id) REFERENCES waiters(id)
+        )
+    """)
 
     base.commit()
 
@@ -381,12 +383,7 @@ def get_employees_with_shifts():
         LEFT JOIN shifts s ON w.id = s.waiter_id
         GROUP BY w.id, name
     """)
-    waiters_result = []
-    for row in cur.fetchall():
-        try:
-            waiters_result.append((row['waiter_id'], row['name']))
-        except TypeError:
-            waiters_result.append((row[0], row[1]))  # Fallback to tuple indices (0 for waiter_id, 1 for name)
+    waiters_result = [(row['waiter_id'], row['name']) for row in cur.fetchall()]
 
     # Query 2: Get employees not linked to waiters
     cur.execute("""
@@ -399,12 +396,7 @@ def get_employees_with_shifts():
         WHERE w.employee_id IS NULL
         GROUP BY e.id, name
     """)
-    employees_result = []
-    for row in cur.fetchall():
-        try:
-            employees_result.append((row['waiter_id'], row['name']))
-        except TypeError:
-            employees_result.append((row[0], row[1]))  # Fallback to tuple indices
+    employees_result = [(row['waiter_id'], row['name']) for row in cur.fetchall()]
 
     # Combine results and remove duplicates
     combined_result = waiters_result + employees_result
