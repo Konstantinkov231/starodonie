@@ -141,7 +141,19 @@ def sql_start():
         """)
 
     base.commit()
-
+conn = sqlite3.connect('starodonie.db')
+cur = conn.cursor()
+cur.executescript("""
+    INSERT INTO waiters (tg_id, name, employee_id) VALUES
+    (2015462319, 'Екатерина Короткова', NULL),
+    (1256687383, 'Екатерина Елисеева', NULL),
+    (1800079636, 'Игорёшечка💋', NULL),
+    (931731946, 'Тестовый аккаунт', NULL),
+    (6380683695, 'Дарья', NULL),
+    (52248505841, 'Рамазан', NULL);
+""")
+conn.commit()
+conn.close()
 # ================== users_start ==================
 def add_user_start(tg_id: int, username: str | None):
     cur.execute(
