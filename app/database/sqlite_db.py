@@ -404,3 +404,20 @@ def get_employees_with_shifts():
 
     logger.debug("get_employees_with_shifts result: %s", unique_result)
     return unique_result
+
+def get_employee_id_for_waiter(waiter_id: int) -> int | None:
+    cur.execute("SELECT employee_id FROM waiters WHERE id=?", (waiter_id,))
+    row = cur.fetchone()
+    return row[0] if row and row[0] else None
+
+def migrate_shifts_to_work_hours():
+    cur.execute("""
+        SELECT s.waiter_id, s.date, s.hours, w.employee_id
+        FROM shifts s
+        JOIN waiters w ON w.id = s.waiter_id
+        WHERE s.hours IS NOT NULL AND w.employee_id IS NOT NULL
+    """)
+    rows = cur.fetchall()
+    for waiter_id, date, hours, emp_id in rows:
+        set_work_hours(emp_id, date, hours)
+
