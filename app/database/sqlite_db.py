@@ -343,15 +343,6 @@ def set_work_hours(employee_id: int, date: str, hours: float):
     )
     base.commit()
 
-def get_work_hours(employee_id: int, date: str) -> float:
-    """Вернуть часы (0.0, если нет записи)."""
-    cur.execute(
-        'SELECT hours FROM work_hours WHERE employee_id=? AND date=?',
-        (employee_id, date)
-    )
-    row = cur.fetchone()
-    return row[0] if row else 0.0
-
 def get_all_work_hours_dates() -> list[str]:
     """Список всех дат, где есть часы (для отметок в календаре)."""
     cur.execute('SELECT DISTINCT date FROM work_hours')
@@ -425,18 +416,71 @@ def migrate_shifts_to_work_hours():
 
 def get_month_hours_with_rate(ym: str) -> list[tuple[str, float, float]]:
     """
-    Вернёт [(ФИО, часы, rate), ...] за месяц ym='YYYY-MM'.
-    Часы суммируются из work_hours.
+    Вернёт [(ФИО, суммарные_часы, rate)] за месяц ym='YYYY-MM',
+    учитывая обе таблицы.
     """
-    cur.execute("""
-        SELECT e.first_name || ' ' || e.last_name        AS fio,
-               SUM(w.hours)                              AS hours,
-               COALESCE(e.rate, ?)                       AS rate
-        FROM work_hours w
-        JOIN employees e ON e.id = w.employee_id
-        WHERE w.date LIKE ?
+    default_rate = float(os.getenv("HOURLY_RATE", "140"))
+
+    # UNION двух выборок, work_hours имеет приоритет
+    cur.execute(f"""
+        WITH wh AS (
+            SELECT employee_id,
+                   date,
+                   hours
+            FROM work_hours
+            WHERE date LIKE '{ym}-%'
+        ),
+        sh AS (
+            SELECT w.employee_id,
+                   s.date,
+                   s.hours
+            FROM shifts s
+            JOIN waiters w ON w.id = s.waiter_id
+            WHERE s.date LIKE '{ym}-%'
+              AND w.employee_id IS NOT NULL
+              AND NOT EXISTS (     -- если уже есть запись в work_hours, пропускаем
+                    SELECT 1 FROM wh
+                    WHERE wh.employee_id = w.employee_id
+                      AND wh.date        = s.date
+              )
+        ),
+        unioned AS (
+            SELECT * FROM wh
+            UNION ALL
+            SELECT * FROM sh
+        )
+        SELECT e.first_name || ' ' || e.last_name AS fio,
+               SUM(u.hours)                       AS hours,
+               COALESCE(e.rate, ?)                AS rate
+        FROM unioned u
+        JOIN employees e ON e.id = u.employee_id
         GROUP BY e.id
         ORDER BY fio
-    """, (float(os.getenv("HOURLY_RATE", "140")), f"{ym}-%"))
+    """, (default_rate,))
     return cur.fetchall()
 
+
+def get_work_hours(employee_id: int, date: str) -> float:
+    """
+    Вернуть часы сотрудника на дату.
+    1) Пытаемся найти в work_hours.
+    2) Если нет — смотрим shifts (через waiter → employee).
+    """
+    # 1. work_hours
+    cur.execute(
+        "SELECT hours FROM work_hours WHERE employee_id=? AND date=?",
+        (employee_id, date)
+    )
+    row = cur.fetchone()
+    if row:
+        return row[0] or 0.0
+
+    # 2. shifts
+    cur.execute("""
+        SELECT s.hours
+        FROM shifts   s
+        JOIN waiters  w ON w.id = s.waiter_id
+        WHERE w.employee_id = ? AND s.date = ?
+    """, (employee_id, date))
+    row = cur.fetchone()
+    return row[0] if row else 0.0
