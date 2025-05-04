@@ -421,3 +421,21 @@ def migrate_shifts_to_work_hours():
     for waiter_id, date, hours, emp_id in rows:
         set_work_hours(emp_id, date, hours)
 
+
+def get_month_hours_with_rate(ym: str) -> list[tuple[str, float, float]]:
+    """
+    Вернёт [(ФИО, часы, rate), ...] за месяц ym='YYYY-MM'.
+    Часы суммируются из work_hours.
+    """
+    cur.execute("""
+        SELECT e.first_name || ' ' || e.last_name        AS fio,
+               SUM(w.hours)                              AS hours,
+               COALESCE(e.rate, ?)                       AS rate
+        FROM work_hours w
+        JOIN employees e ON e.id = w.employee_id
+        WHERE w.date LIKE ?
+        GROUP BY e.id
+        ORDER BY fio
+    """, (float(os.getenv("HOURLY_RATE", "140")), f"{ym}-%"))
+    return cur.fetchall()
+
