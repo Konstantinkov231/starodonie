@@ -416,32 +416,26 @@ def migrate_shifts_to_work_hours():
 
 def get_month_hours_with_rate(ym: str) -> list[tuple[str, float, float]]:
     """
-    Вернёт [(ФИО, суммарные_часы, rate)] за месяц ym='YYYY-MM',
-    учитывая обе таблицы.
+    [(ФИО, часы_за_месяц, ставка)]  — берём work_hours + дополнение из shifts.
     """
     default_rate = float(os.getenv("HOURLY_RATE", "140"))
 
-    # UNION двух выборок, work_hours имеет приоритет
     cur.execute(f"""
         WITH wh AS (
-            SELECT employee_id,
-                   date,
-                   hours
+            SELECT employee_id, date, hours
             FROM work_hours
             WHERE date LIKE '{ym}-%'
         ),
         sh AS (
-            SELECT w.employee_id,
-                   s.date,
-                   s.hours
+            SELECT w.employee_id, s.date, s.hours
             FROM shifts s
             JOIN waiters w ON w.id = s.waiter_id
             WHERE s.date LIKE '{ym}-%'
               AND w.employee_id IS NOT NULL
-              AND NOT EXISTS (     -- если уже есть запись в work_hours, пропускаем
-                    SELECT 1 FROM wh
-                    WHERE wh.employee_id = w.employee_id
-                      AND wh.date        = s.date
+              AND NOT EXISTS (
+                  SELECT 1 FROM wh
+                  WHERE wh.employee_id = w.employee_id
+                    AND wh.date        = s.date
               )
         ),
         unioned AS (
@@ -460,13 +454,10 @@ def get_month_hours_with_rate(ym: str) -> list[tuple[str, float, float]]:
     return cur.fetchall()
 
 
+
 def get_work_hours(employee_id: int, date: str) -> float:
-    """
-    Вернуть часы сотрудника на дату.
-    1) Пытаемся найти в work_hours.
-    2) Если нет — смотрим shifts (через waiter → employee).
-    """
-    # 1. work_hours
+    """Часы сотрудника за дату — сначала work_hours, потом shifts."""
+    # work_hours
     cur.execute(
         "SELECT hours FROM work_hours WHERE employee_id=? AND date=?",
         (employee_id, date)
@@ -475,11 +466,11 @@ def get_work_hours(employee_id: int, date: str) -> float:
     if row:
         return row[0] or 0.0
 
-    # 2. shifts
+    # shifts (если строка в work_hours не найдена)
     cur.execute("""
         SELECT s.hours
-        FROM shifts   s
-        JOIN waiters  w ON w.id = s.waiter_id
+        FROM shifts s
+        JOIN waiters w ON w.id = s.waiter_id
         WHERE w.employee_id = ? AND s.date = ?
     """, (employee_id, date))
     row = cur.fetchone()
