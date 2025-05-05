@@ -475,3 +475,13 @@ def get_work_hours(employee_id: int, date: str) -> float:
     """, (employee_id, date))
     row = cur.fetchone()
     return row[0] if row else 0.0
+
+def get_cursor() -> sqlite3.Cursor:
+    """
+    Возвращает рабочий курсор.
+    Если база ещё не инициализирована, кидает на sql_start().
+    """
+    global base, cur
+    if base is None:
+        sql_start()
+    return base.cursor()
