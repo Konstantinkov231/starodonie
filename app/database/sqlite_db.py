@@ -359,43 +359,6 @@ def set_waiter_name(tg_id: int, name: str):
     base.commit()
 
 
-def get_employees_with_shifts():
-    global base
-    if not base:
-        sql_start()  # Initialize connection if not already done
-
-    cur = base.cursor()
-    # Query 1: Get waiters with their employee details (if linked)
-    cur.execute("""
-        SELECT 
-            w.id AS waiter_id,
-            COALESCE(e.first_name || ' ' || e.last_name, w.name, 'Без имени') AS name
-        FROM waiters w
-        LEFT JOIN employees e ON w.employee_id = e.id
-        LEFT JOIN shifts s ON w.id = s.waiter_id
-        GROUP BY w.id, name
-    """)
-    waiters_result = [(row['waiter_id'], row['name']) for row in cur.fetchall()]
-
-    # Query 2: Get employees not linked to waiters
-    cur.execute("""
-        SELECT 
-            e.id AS waiter_id,
-            COALESCE(e.first_name || ' ' || e.last_name, 'Без имени') AS name
-        FROM employees e
-        LEFT JOIN waiters w ON e.id = w.employee_id
-        LEFT JOIN shifts s ON e.id = s.waiter_id
-        WHERE w.employee_id IS NULL
-        GROUP BY e.id, name
-    """)
-    employees_result = [(row['waiter_id'], row['name']) for row in cur.fetchall()]
-
-    # Combine results and remove duplicates
-    combined_result = waiters_result + employees_result
-    unique_result = list(dict.fromkeys(combined_result))  # Remove duplicates based on (waiter_id, name)
-
-    logger.debug("get_employees_with_shifts result: %s", unique_result)
-    return unique_result
 
 def get_employee_id_for_waiter(waiter_id: int) -> int | None:
     cur.execute("SELECT employee_id FROM waiters WHERE id=?", (waiter_id,))
@@ -485,3 +448,37 @@ def get_cursor() -> sqlite3.Cursor:
     if base is None:
         sql_start()
     return base.cursor()
+
+def get_employees_with_shifts():
+    """
+    Возвращает список (id, name) без дубликатов по id,
+    беря имена из employees, если они там есть, иначе — из waiters.
+    """
+    global base
+    if not base:
+        sql_start()
+
+    cur = base.cursor()
+    # 1. Берём всех из waiters с их именами (либо из employees, если связаны)
+    cur.execute("""
+        SELECT w.id AS id,
+               COALESCE(e.first_name || ' ' || e.last_name, w.name, 'Без имени') AS name
+        FROM waiters w
+        LEFT JOIN employees e ON w.employee_id = e.id
+    """)
+    mapping: dict[int, str] = {row["id"]: row["name"] for row in cur.fetchall()}
+
+    # 2. Берём всех из employees — переопределяем запись по тому же id
+    cur.execute("""
+        SELECT id,
+               first_name || ' ' || last_name AS name
+        FROM employees
+    """)
+    for row in cur.fetchall():
+        mapping[row["id"]] = row["name"]
+
+    # 3. Составляем итоговый список
+    result = [(eid, mapping[eid]) for eid in mapping]
+    logger.debug("get_employees_with_shifts result: %s", result)
+    return result
+
