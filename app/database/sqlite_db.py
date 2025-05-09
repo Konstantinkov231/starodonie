@@ -449,36 +449,45 @@ def get_cursor() -> sqlite3.Cursor:
         sql_start()
     return base.cursor()
 
-def get_employees_with_shifts():
+def get_employees_with_shifts() -> list[tuple[int,str]]:
     """
-    Возвращает список (id, name) без дубликатов по id,
-    беря имена из employees, если они там есть, иначе — из waiters.
+    Возвращает [(id, name), …] сначала из waiters (даже без shift),
+    а затем из employees, при этом многократно не дублируя
+    пару (id, name).
     """
     global base
     if not base:
         sql_start()
-
     cur = base.cursor()
-    # 1. Берём всех из waiters с их именами (либо из employees, если связаны)
+
+    # 1) Берём всех из waiters, с именем из employees если есть, иначе из w.name
     cur.execute("""
-        SELECT w.id AS id,
-               COALESCE(e.first_name || ' ' || e.last_name, w.name, 'Без имени') AS name
+        SELECT 
+            w.id   AS id,
+            COALESCE(e.first_name || ' ' || e.last_name, w.name, 'Без имени') AS name
         FROM waiters w
         LEFT JOIN employees e ON w.employee_id = e.id
     """)
-    mapping: dict[int, str] = {row["id"]: row["name"] for row in cur.fetchall()}
+    waiters_result = [(row["id"], row["name"]) for row in cur.fetchall()]
 
-    # 2. Берём всех из employees — переопределяем запись по тому же id
+    # 2) Берём всех из employees, у которых нет linked waiter
     cur.execute("""
-        SELECT id,
-               first_name || ' ' || last_name AS name
-        FROM employees
+        SELECT 
+            e.id   AS id,
+            e.first_name || ' ' || e.last_name AS name
+        FROM employees e
+        LEFT JOIN waiters w ON w.employee_id = e.id
+        WHERE w.employee_id IS NULL
     """)
-    for row in cur.fetchall():
-        mapping[row["id"]] = row["name"]
+    employees_result = [(row["id"], row["name"]) for row in cur.fetchall()]
 
-    # 3. Составляем итоговый список
-    result = [(eid, mapping[eid]) for eid in mapping]
-    logger.debug("get_employees_with_shifts result: %s", result)
-    return result
+    # 3) Объединяем списки, удаляя полные дубликаты (по паре id,name)
+    seen = set()
+    combined = []
+    for pair in waiters_result + employees_result:
+        if pair not in seen:
+            seen.add(pair)
+            combined.append(pair)
 
+    logger.debug("get_employees_with_shifts result: %s", combined)
+    return combined
