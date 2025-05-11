@@ -460,34 +460,25 @@ def get_employees_with_shifts() -> list[tuple[int,str]]:
         sql_start()
     cur = base.cursor()
 
-    # 1) Берём всех из waiters, с именем из employees если есть, иначе из w.name
+    # 1) Все официанты (waiters)
     cur.execute("""
-        SELECT 
-            w.id   AS id,
-            COALESCE(e.first_name || ' ' || e.last_name, w.name, 'Без имени') AS name
-        FROM waiters w
-        LEFT JOIN employees e ON w.employee_id = e.id
-    """)
-    waiters_result = [(row["id"], row["name"]) for row in cur.fetchall()]
+            SELECT 
+                w.id   AS id,
+                COALESCE(e.first_name || ' ' || e.last_name, w.name, 'Без имени') AS name
+            FROM waiters w
+            LEFT JOIN employees e ON w.employee_id = e.id
+        """)
+    mapping: dict[int, str] = {row["id"]: row["name"] for row in cur.fetchall()}
 
-    # 2) Берём всех из employees, у которых нет linked waiter
-    cur.execute("""
-        SELECT 
-            e.id   AS id,
-            e.first_name || ' ' || e.last_name AS name
-        FROM employees e
-        LEFT JOIN waiters w ON w.employee_id = e.id
-        WHERE w.employee_id IS NULL
-    """)
-    employees_result = [(row["id"], row["name"]) for row in cur.fetchall()]
+    # 2) Все сотрудники (employees) — перезаписываем имя по тому же id
+    cur.execute("SELECT id, first_name || ' ' || last_name AS name FROM employees")
+    for row in cur.fetchall():
+        mapping[row["id"]] = row["name"]
 
-    # 3) Объединяем списки, удаляя полные дубликаты (по паре id,name)
-    seen = set()
-    combined = []
-    for pair in waiters_result + employees_result:
-        if pair not in seen:
-            seen.add(pair)
-            combined.append(pair)
+    # 3) Собираем итоговый список (каждый id только раз)
+    result = [(eid, mapping[eid]) for eid in sorted(mapping)]
+    logger.debug("get_employees_with_shifts result: %s", result)
+    return result
 
     logger.debug("get_employees_with_shifts result: %s", combined)
     return combined
