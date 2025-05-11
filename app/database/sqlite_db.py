@@ -449,40 +449,40 @@ def get_cursor() -> sqlite3.Cursor:
         sql_start()
     return base.cursor()
 
-def get_employees_with_shifts() -> list[tuple[int, str]]:
+def get_employees_with_shifts() -> list[tuple[str,str]]:
+    """
+    Возвращает список (uid, name), где
+     - uid == 'W{id}' для всех waiters
+     - uid == 'E{id}' для всех unlinked employees
+    """
     global base
     if not base:
         sql_start()
     cur = base.cursor()
 
-    # 1) Все официанты (waiters), с именем из employees, если он привязан
+    # 1) Все официанты
     cur.execute("""
         SELECT 
-            w.id       AS id,
-            COALESCE(e.first_name || ' ' || e.last_name, w.name, 'Без имени') AS name
+          w.id   AS id,
+          COALESCE(e.first_name || ' ' || e.last_name, w.name, 'Без имени') AS name
         FROM waiters w
         LEFT JOIN employees e ON w.employee_id = e.id
     """)
-    waiters = [(row["id"], row["name"]) for row in cur.fetchall()]
+    waiters = [(f"W{row['id']}", row['name']) for row in cur.fetchall()]
 
-    # 2) Все сотрудники (employees), у которых нет привязки в waiters
+    # 2) Все сотрудники без привязки в waiters
     cur.execute("""
         SELECT 
-            e.id   AS id,
-            e.first_name || ' ' || e.last_name AS name
+          e.id AS id,
+          e.first_name || ' ' || e.last_name AS name
         FROM employees e
         LEFT JOIN waiters w ON w.employee_id = e.id
         WHERE w.id IS NULL
     """)
-    employees = [(row["id"], row["name"]) for row in cur.fetchall()]
+    employees = [(f"E{row['id']}", row['name']) for row in cur.fetchall()]
 
-    # 3) Объединяем, убирая только полные дубликаты (id, name)
-    seen = set()
-    combined: list[tuple[int, str]] = []
-    for pair in waiters + employees:
-        if pair not in seen:
-            seen.add(pair)
-            combined.append(pair)
-
+    # 3) Объединяем, удаляя полные дубликаты (хотя uid уже уникальные)
+    combined = waiters + employees
     logger.debug("get_employees_with_shifts result: %s", combined)
     return combined
+
