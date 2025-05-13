@@ -92,13 +92,6 @@
       <option name="presentableId" value="Default" />
       <updated>1729617431391</updated>
     </task>
-    <task id="LOCAL-00157" summary="офики">
-      <created>1746053154351</created>
-      <option name="number" value="00157" />
-      <option name="presentableId" value="LOCAL-00157" />
-      <option name="project" value="LOCAL" />
-      <updated>1746053154366</updated>
-    </task>
     <task id="LOCAL-00158" summary="офики">
       <created>1746053250192</created>
       <option name="number" value="00158" />
@@ -435,7 +428,14 @@
       <option name="project" value="LOCAL" />
       <updated>1747166408586</updated>
     </task>
-    <option name="localTasksCounter" value="206" />
+    <task id="LOCAL-00206" summary="офики">
+      <created>1747168985719</created>
+      <option name="number" value="00206" />
+      <option name="presentableId" value="LOCAL-00206" />
+      <option name="project" value="LOCAL" />
+      <updated>1747168985720</updated>
+    </task>
+    <option name="localTasksCounter" value="207" />
     <servers />
   </component>
   <component name="Vcs.Log.History.Properties">
